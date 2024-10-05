@@ -5,38 +5,25 @@ import datetime
 
 SECRET_KEY = "OK_6SOME_SE5CRET"
 
-def generate_jwt(username):
-    expiration = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=365 * 100)
-    return jwt.encode({
-        'username': username,
-        'exp': expiration
-    }, SECRET_KEY, algorithm='HS256')
-
-class UserService:
-    def __init__(self, db_path='users.db'):
-        # Create new db, if doesn't exist
+class TaskService:
+    def __init__(self, db_path='tasks.db'):
+        # Create new DB, if doesn't exist
         self.conn = sqlite3.connect(db_path)
         self.cursor = self.conn.cursor()
         self.db_path = db_path
-        
-        self.cursor.execute('''
-            CREATE TABLE IF NOT EXISTS registration (
-                email TEXT NOT NULL,
-                username TEXT NOT NULL CHECK (LENGTH(username) >= 4 AND LENGTH(username) <= 50),
-                password TEXT NOT NULL CHECK (LENGTH(password) >= 4 AND LENGTH(password) <= 50),
-                jwt TEXT NOT NULL
-            )
-        ''')
 
+        # task_data
         self.cursor.execute('''
-            CREATE TABLE IF NOT EXISTS roles (
-                username TEXT NOT NULL CHECK (LENGTH(username) >= 4 AND LENGTH(username) <= 50),
+            CREATE TABLE IF NOT EXISTS task_data (
                 "group" TEXT NOT NULL CHECK (LENGTH("group") >= 1 AND LENGTH("group") <= 100),
-                admin BOOLEAN NOT NULL,
-                PRIMARY KEY (username, "group")
+                task TEXT NOT NULL CHECK (LENGTH(task) >= 1 AND LENGTH(task) <= 100),
+                member TEXT NOT NULL CHECK (LENGTH(member) >= 4 AND LENGTH(member) <= 50),
+                deadline DATETIME NOT NULL,
+                description TEXT, -- No size limit
+                todo_task BOOLEAN NOT NULL,
+                PRIMARY KEY ("group", task, member)
             )
         ''')
-
         self.conn.commit()
         print(f"{self.db_path} created or verified successfully!")
 
@@ -45,78 +32,22 @@ class UserService:
         self.conn.close()
         print(f"Connection to DB {self.db_path} closed.")
 
-    def register_user(self, json_data):
-        data = json.loads(json_data)
-        email = data['email']
-        username = data['username']
-        password = data['password']
-        
-        # Check if user exist
-        self.cursor.execute('SELECT * FROM registration WHERE email = ? OR username = ?', (email, username))
-        existing_user = self.cursor.fetchone()
 
-        if existing_user:
-            return False
-        else:
-            jwt_token = generate_jwt(username)
-            self.cursor.execute('INSERT INTO registration (email, username, password, jwt) VALUES (?, ?, ?, ?)',
-                                (email, username, password, jwt_token))
-            self.conn.commit()
-            return True
-    
-    def login_user(self, json_data):
-        data = json.loads(json_data)
-        username = data['username']
-        password = data['password']
-
-        # Check if user exist
-        self.cursor.execute('SELECT password FROM registration WHERE username = ?', (username,))
-        user_record = self.cursor.fetchone()
-        return user_record is not None and user_record[0] == password
+    def add_task(self, group, task, member, deadline, description=""):
+        self.cursor.execute('''
+            INSERT INTO task_data ("group", task, member, deadline, todo_task, description)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (group, task, member, deadline, True, description))
+        self.conn.commit()
 
 
-#########
-# TESTS #
-#########
-import os
-
-def test_user_service():
-    db_path = 'Test.db'
-    user_service = UserService(db_path)
-    register_data = json.dumps({
-        'email': 'test0@example.com',
-        'username': 'Test0',
-        'password': '1234at'
-    })
-
-    # Registration
-    registration_result = user_service.register_user(register_data)
-    assert(registration_result == True)
-
-    reg_res2 = user_service.register_user(register_data)
-    assert(reg_res2 == False)
-
-    login_data_correct = json.dumps({
-        'username': 'Test0',
-        'password': '1234at'
-    })
-    login_result = user_service.login_user(login_data_correct)
-    assert(login_result == True)
+    def delete_task(self, group, task, member):
+        self.cursor.execute('DELETE FROM task_data WHERE "group" = ? AND task = ? AND member = ?', (group, task, member))
+        self.conn.commit()
 
 
-    login_data_wrong_username = json.dumps({
-        'username': 'unknown_name',
-        'password': '1234at'
-    })
-    login_result_username = user_service.login_user(login_data_wrong_username)
-    assert(login_result_username == False)
+# Example of use
+task_service = TaskService()
 
-    login_data_wrong_password = json.dumps({
-        'username': 'Test0',
-        'password': 'wrong_password'
-    })
-    login_result_password = user_service.login_user(login_data_wrong_password)
-    assert(login_result_password == False)
-    os.remove(db_path)
-
-# test_user_service()
+task_service.add_task('Development', 'Create API', 'user123', '2024-12-31 23:59:59', 'Development API')
+task_service.delete_task('Development', 'Create API', 'user123')
