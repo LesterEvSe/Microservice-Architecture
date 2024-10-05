@@ -28,15 +28,6 @@ class UserService:
             )
         ''')
 
-        self.cursor.execute('''
-            CREATE TABLE IF NOT EXISTS roles (
-                username TEXT NOT NULL CHECK (LENGTH(username) >= 4 AND LENGTH(username) <= 50),
-                "group" TEXT NOT NULL CHECK (LENGTH("group") >= 1 AND LENGTH("group") <= 100),
-                admin BOOLEAN NOT NULL,
-                PRIMARY KEY (username, "group")
-            )
-        ''')
-
         self.conn.commit()
         print(f"{self.db_path} created or verified successfully!")
 

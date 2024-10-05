@@ -39,7 +39,8 @@ class MyHandler(BaseHTTPRequestHandler):
         received_data = json.dumps({
             "type": "registration",
             "username": 'Test0',
-            "password": 'wrong_password'  # Неправильний пароль
+            "password": '1111',
+            "email": "test0@example.com"
         })
 
         msg_type = received_data["type"]
@@ -58,9 +59,7 @@ class MyHandler(BaseHTTPRequestHandler):
         #elif msg_type == "add_task":
 
 
-
     def send_to_service(self, to_port, data):
-        """Метод для надсилання даних на вказаний порт іншого сервісу"""
         try:
             service_url = f'http://localhost:{to_port}/receive_json'
             print(f"Sending data to service at {service_url}")

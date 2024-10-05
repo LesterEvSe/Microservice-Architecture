@@ -12,18 +12,27 @@ class TaskService:
         self.cursor = self.conn.cursor()
         self.db_path = db_path
 
-        # task_data
+        # task_data. Must be initialize first
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS task_data (
-                "group" TEXT NOT NULL CHECK (LENGTH("group") >= 1 AND LENGTH("group") <= 100),
                 task TEXT NOT NULL CHECK (LENGTH(task) >= 1 AND LENGTH(task) <= 100),
-                member TEXT NOT NULL CHECK (LENGTH(member) >= 4 AND LENGTH(member) <= 50),
                 deadline DATETIME NOT NULL,
-                description TEXT, -- No size limit
+                description TEXT,
                 todo_task BOOLEAN NOT NULL,
-                PRIMARY KEY ("group", task, member)
+                PRIMARY KEY (task)
             )
         ''')
+
+        # roles
+        self.cursor.execute('''
+            CREATE TABLE IF NOT EXISTS roles (
+                task TEXT NOT NULL CHECK (LENGTH(task) >= 1 AND LENGTH(task) <= 100),
+                member TEXT NOT NULL CHECK (LENGTH(member) >= 4 AND LENGTH(member) <= 50),
+                admin BOOLEAN NOT NULL,
+                FOREIGN KEY (task) REFERENCES task_data(task)
+            )
+        ''')
+
         self.conn.commit()
         print(f"{self.db_path} created or verified successfully!")
 
@@ -33,16 +42,16 @@ class TaskService:
         print(f"Connection to DB {self.db_path} closed.")
 
 
-    def add_task(self, group, task, member, deadline, description=""):
+    def add_task(self, task, member, deadline, description=""):
         self.cursor.execute('''
-            INSERT INTO task_data ("group", task, member, deadline, todo_task, description)
-            VALUES (?, ?, ?, ?, ?, ?)
-        ''', (group, task, member, deadline, True, description))
+            INSERT INTO task_data (task, member, deadline, todo_task, description)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (task, member, deadline, True, description))
         self.conn.commit()
 
 
-    def delete_task(self, group, task, member):
-        self.cursor.execute('DELETE FROM task_data WHERE "group" = ? AND task = ? AND member = ?', (group, task, member))
+    def delete_task(self, task, member):
+        self.cursor.execute('DELETE FROM task_data WHERE task = ? AND member = ?', (task, member))
         self.conn.commit()
 
 
