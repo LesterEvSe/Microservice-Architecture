@@ -34,7 +34,8 @@ curl -X POST http://localhost:5001/ -H "Content-Type: application/json" -d '{
 }'
 
 return_type {
-    "groups": ["some", "groups"]
+    "group_id": ["id0", ...],
+    "group_name": ["name0", ...],
     "jwt": "key"
 }
 ```
