@@ -19,7 +19,8 @@ curl -X POST http://localhost:5001/ -H "Content-Type: application/json" -d '{
 }'
 
 return_type {
-    "groups": [["some_group_name", "id"], ["groups_name_another", "second_id"]]
+    "group_id": ["id0", ...],
+    "group_name": ["name0", ...],
     "jwt": "key"
 }
 ```
@@ -113,11 +114,18 @@ curl -X POST http://localhost:5001/ -H "Content-Type: application/json" -d '{
 ``` shell
 curl -X POST http://localhost:5001/ -H "Content-Type: application/json" -d '{
     "type": "add_task",
-    "task_id": "id"
-    "task" "task text with len [1; 100]",
-    "description": "text",
-    "deadline": "some datetime",
-    "todo_task": "True/False",
+    "group_id",
     "jwt": "key"
 }'
+
+return_type {
+    "task_id": ["id0", ...],
+    "task_name": ["name0", ...],
+    "description": ["desc0", ...],
+    "deadline": ["deadline0", ...],
+    "todo_task": ["todo_task0", ...]
+}
 ```
+
+### Google auth
+I do not know yet.
