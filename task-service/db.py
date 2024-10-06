@@ -58,22 +58,25 @@ class TaskService:
         self.conn.close()
         print(f"Connection to DB {self.db_path} closed.")
 
-    # TODO add error handler
     def get_groups_for_user(self, username):
-        self.cursor.execute('''
-            SELECT DISTINCT g.group_id, g."group"
-            FROM groups g
-            WHERE g.member = ?
-        ''', (username,))
-        rows = self.cursor.fetchall()
-    
-        result = []
-        for row in rows:
-            result.append({
-                "group_id": row[0],
-                "group": row[1]
-            })
-        return json.dumps({"groups": result})
+        try:
+            self.cursor.execute('''
+                SELECT DISTINCT g.group_id, g."group"
+                FROM groups g
+                WHERE g.member = ?
+            ''', (username,))
+            rows = self.cursor.fetchall()
+        
+            result = []
+            for row in rows:
+                result.append({
+                    "group_id": row[0],
+                    "group": row[1]
+                })
+            return json.dumps({"groups": result})
+
+        except Exception as e:
+            return json.dumps({"error": str(e)})
 
     # TODO think about where to add an error handler
     def add_group(self, group, member, admin: bool) -> bool:
