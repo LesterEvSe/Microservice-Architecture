@@ -1,9 +1,9 @@
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler
 import json
 import requests
-from constants import TASK_SERVICE
 from db import UserService
 
+TASK_SERVICE=5002
 DB = UserService()
 
 '''
@@ -15,7 +15,7 @@ curl -X POST http://localhost:5001/ -H "Content-Type: application/json" -d '{
 }'
 '''
 
-class MyHandler(BaseHTTPRequestHandler):
+class UserHandler(BaseHTTPRequestHandler):
     def _task_service_interaction(self, json_data):
         task_data = self.send_to_service(TASK_SERVICE, json_data)
         if "error" in task_data:
@@ -37,15 +37,6 @@ class MyHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(json.dumps(json_data).encode('utf-8'))
 
-
-        '''
-        received_data = json.dumps({
-            "type": "registration",
-            "username": 'Test0',
-            "password": '1111',
-            "email": "test0@example.com"
-        })
-        '''
     def do_POST(self):
         # Get data from other services
         # TODO test later
@@ -56,7 +47,10 @@ class MyHandler(BaseHTTPRequestHandler):
         msg_type = received_data["type"]
         if msg_type == "registration":
             if DB.register_user(received_data):
-                self._task_service_interaction(received_data)
+                self._task_service_interaction(json.dumps({
+                    "type": "get_groups",
+                    "username": received_data["username"]
+                }))
             else:
                 self._send_error("This username is already taken.")
 

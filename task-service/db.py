@@ -1,9 +1,5 @@
 import sqlite3
 import json
-import jwt
-import datetime
-
-SECRET_KEY = "OK_6SOME_SE5CRET"
 
 class TaskService:
     def _create_tables(self):

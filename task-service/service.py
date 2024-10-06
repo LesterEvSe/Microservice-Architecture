@@ -8,7 +8,7 @@ USER_SERVICE=5001
 
 DB = TaskService()
 
-class MyHandler(BaseHTTPRequestHandler):
+class TaskHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         post_data = self.rfile.read(int(self.headers['Content-Length']))
         

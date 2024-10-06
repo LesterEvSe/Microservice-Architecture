@@ -53,7 +53,7 @@ class UserService:
         self.cursor.execute('INSERT INTO registration (email, username, password, jwt) VALUES (?, ?, ?, ?)',
                             (email, username, password, jwt_token))
         self.conn.commit()
-        return True
+        return jwt_token
     
     def login_user(self, json_data):
         username = json_data['username']
@@ -62,7 +62,13 @@ class UserService:
         # Check if user exist
         self.cursor.execute('SELECT password FROM registration WHERE username = ?', (username,))
         user_record = self.cursor.fetchone()
-        return user_record is not None and user_record[0] == password
+        if user_record is None or user_record[0] != password:
+            return False
+        
+        jwt_token = generate_jwt(username)
+        self.cursor.execute('UPDATE registration SET jwt = ? WHERE username = ?', (jwt_token, username))
+        self.conn.commit()
+        return jwt_token
     
     def check_jwt(self, username, jwt):
         pass
