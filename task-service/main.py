@@ -1,5 +1,6 @@
-from constants import *
 from service import *
+
+CURR_SERVICE = 5002
 
 if __name__ == "__main__":
     server_address = ('', CURR_SERVICE)

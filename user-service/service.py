@@ -6,6 +6,15 @@ from db import UserService
 
 DB = UserService()
 
+'''
+curl -X POST http://localhost:5001/ -H "Content-Type: application/json" -d '{
+    "type": "registration",
+    "username": "Test0",
+    "password": "1111",
+    "email": "test0@example.com"
+}'
+'''
+
 class MyHandler(BaseHTTPRequestHandler):
     def _task_service_interaction(self, json_data):
         task_data = self.send_to_service(TASK_SERVICE, json_data)
@@ -26,22 +35,23 @@ class MyHandler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header('Content-type', 'application/json')
         self.end_headers()
-        self.wfile.write(json_data)
+        self.wfile.write(json.dumps(json_data).encode('utf-8'))
 
-    def do_POST(self):
-        # Get data from other services
-        # TODO test later
 
-        #post_data = self.rfile.read(int(self.headers['Content-Length']))
-        #received_data = json.loads(post_data)
-        #print(f"Received DATA1 from frontend: {received_data}")
-
+        '''
         received_data = json.dumps({
             "type": "registration",
             "username": 'Test0',
             "password": '1111',
             "email": "test0@example.com"
         })
+        '''
+    def do_POST(self):
+        # Get data from other services
+        # TODO test later
+        post_data = self.rfile.read(int(self.headers['Content-Length']))
+        received_data = json.loads(post_data.decode('utf-8'))
+        print(f"Received DATA1 from frontend: {received_data}")
 
         msg_type = received_data["type"]
         if msg_type == "registration":

@@ -24,7 +24,9 @@ class UserService:
                 email TEXT NOT NULL,
                 username TEXT NOT NULL CHECK (LENGTH(username) >= 4 AND LENGTH(username) <= 50),
                 password TEXT NOT NULL CHECK (LENGTH(password) >= 4 AND LENGTH(password) <= 50),
-                jwt TEXT NOT NULL
+                jwt TEXT NOT NULL,
+                
+                PRIMARY KEY (email, username)
             )
         ''')
 
@@ -38,10 +40,9 @@ class UserService:
 
     # TODO maybe need to return JWT Key too
     def register_user(self, json_data):
-        data = json.loads(json_data)
-        email = data['email']
-        username = data['username']
-        password = data['password']
+        email = json_data['email']
+        username = json_data['username']
+        password = json_data['password']
         
         # Check if user exist
         self.cursor.execute('SELECT * FROM registration WHERE email = ? OR username = ?', (email, username))
@@ -55,14 +56,16 @@ class UserService:
         return True
     
     def login_user(self, json_data):
-        data = json.loads(json_data)
-        username = data['username']
-        password = data['password']
+        username = json_data['username']
+        password = json_data['password']
 
         # Check if user exist
         self.cursor.execute('SELECT password FROM registration WHERE username = ?', (username,))
         user_record = self.cursor.fetchone()
         return user_record is not None and user_record[0] == password
+    
+    def check_jwt(self, username, jwt):
+        pass
 
 
 #########
