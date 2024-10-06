@@ -9,8 +9,8 @@ class TaskService:
             CREATE TABLE IF NOT EXISTS task_data (
                 task_id INTEGER PRIMARY KEY AUTOINCREMENT,
                 task TEXT NOT NULL CHECK (LENGTH(task) >= 1 AND LENGTH(task) <= 100),
-                deadline DATETIME NOT NULL,
                 description TEXT,
+                deadline DATETIME NOT NULL,
                 todo_task BOOLEAN NOT NULL
             )
         ''')
@@ -89,16 +89,16 @@ class TaskService:
             return True
         
         except sqlite3.IntegrityError:
-            print
+            print(f"Error in add_group: {e}")
             self.conn.rollback()
             return False
         
         except Exception as e:
-            print(f"An error occurred: {e}")
+            print(f"Error in add_group: {e}")
             self.conn.rollback()  # Скасуємо зміни в разі будь-якої іншої помилки
             return False
     
-    # Next 3 methods only for admins
+    # Next 3 methods only for group admins
     def delete_group(self, group_id) -> str:
         pass
 
@@ -130,18 +130,21 @@ class TaskService:
             return True
         
         except Exception as e:
-            print(f"An error occurred: {e}")
+            print(f"Error in add_task: {e}")
             self.conn.rollback()
             return False
 
-    def delete_task(self, task):
-        self.cursor.execute('DELETE FROM task_data WHERE task = ?', (task,))
-        self.conn.commit()
+    # If the user is responsible for this task, or is an admin of group
+    def delete_task(self, member, group_id, task_id):
+        pass
+        #self.cursor.execute('DELETE FROM task_data WHERE task = ?', (task,))
+        #self.conn.commit()
     
-    def update_task(self, group, task, deadline, description, todo_task, member):
+    # Or maybe array of members ???
+    def update_task(self, task_id, task, description, deadline, todo_task, member):
         pass
 
-    def get_task_for_group(self, member, group_id):
+    def get_tasks_for_group(self, member, group_id):
         pass
     
     

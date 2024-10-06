@@ -10,7 +10,7 @@ class UserHandler(BaseHTTPRequestHandler):
     def _task_service_interaction(self, json_data, jwt=None):
         task_data = json.loads(self.send_to_service(TASK_SERVICE, json_data))
 
-        # task_data["error"] can't do this, because of KeyError
+        # Can't do task_data[“error”] because of KeyError
         if "error" in task_data:
             print(task_data)
             self._send_error(task_data["error"])
@@ -51,7 +51,6 @@ class UserHandler(BaseHTTPRequestHandler):
             else:
                 self._send_error(jwt_token[1])
 
-        # Not implement properly yet
         elif msg_type == "login":
             jwt_token = DB.login_user(received_data)
 

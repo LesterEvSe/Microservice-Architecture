@@ -1,6 +1,5 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
-import requests
 from db import TaskService
 
 # Maybe does not need``
