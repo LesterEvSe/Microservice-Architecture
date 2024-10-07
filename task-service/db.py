@@ -27,7 +27,7 @@ class TaskService:
 
         # group_data
         # ON DELETE CASCADE explanation below.
-        # If we delete the parent table data, it will be automatically deleted here as well
+        # If we delete the parent table data, it will be automatically deleted data here as well
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS group_data (
                 group_id TEXT NOT NULL CHECK (LENGTH("group") >= 1 AND LENGTH("group") <= 100),
@@ -67,18 +67,16 @@ class TaskService:
             ''', (username,))
             rows = self.cursor.fetchall()
         
-            result = []
+            result = {"group_id": [], "group": []}
             for row in rows:
-                result.append({
-                    "group_id": row[0],
-                    "group": row[1]
-                })
+                result["group_id"].append(row[0])
+                result["group"].append(row[1])
             return json.dumps({"groups": result})
 
         except Exception as e:
-            return json.dumps({"error": str(e)})
+            print(f"Error in get_groups_for_user: {str(e)}")
+            return json.dumps({"error": "Can't get groups for this user."})
 
-    # TODO think about where to add an error handler
     def add_group(self, group, member, admin: bool) -> bool:
         try:
             self.cursor.execute('''
@@ -111,7 +109,7 @@ class TaskService:
     def is_user_admin_of_group(self, username, group) -> bool:
         pass
 
-    def add_task(self, group, task, deadline, description, todo_task, member) -> bool:
+    def add_task(self, group, task, deadline, description, todo_task, member: list) -> bool:
         try:
             # 1. Add task to certain table
             self.cursor.execute('''
@@ -134,14 +132,13 @@ class TaskService:
             self.conn.rollback()
             return False
 
-    # If the user is responsible for this task, or is an admin of group
+    # If the user is responsible for this task, or is an admin of the group
     def delete_task(self, member, group_id, task_id):
         pass
         #self.cursor.execute('DELETE FROM task_data WHERE task = ?', (task,))
         #self.conn.commit()
     
-    # Or maybe array of members ???
-    def update_task(self, task_id, task, description, deadline, todo_task, member):
+    def update_task(self, task_id, task, description, deadline, todo_task, member: list):
         pass
 
     def get_tasks_for_group(self, member, group_id):

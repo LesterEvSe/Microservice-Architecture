@@ -44,14 +44,20 @@ return_type {
 ``` shell
 curl -X POST http://localhost:5001/ -H "Content-Type: application/json" -d '{
     "type": "add_group",
+    "group": "name",
     "jwt": "key"
 }'
+
+return_type {
+    "group_id": "id"
+}
 ```
 
 ### Delete Group
 ``` shell
 curl -X POST http://localhost:5001/ -H "Content-Type: application/json" -d '{
     "type": "delete_group",
+    "group_id": "id",
     "jwt": "key"
 }'
 ```
@@ -60,6 +66,8 @@ curl -X POST http://localhost:5001/ -H "Content-Type: application/json" -d '{
 ``` shell
 curl -X POST http://localhost:5001/ -H "Content-Type: application/json" -d '{
     "type": "add_member_to_group",
+    "group_id": "id",
+    "member": "name",
     "jwt": "key"
 }'
 ```
@@ -68,6 +76,7 @@ curl -X POST http://localhost:5001/ -H "Content-Type: application/json" -d '{
 ``` shell
 curl -X POST http://localhost:5001/ -H "Content-Type: application/json" -d '{
     "type": "delete_member_from_group",
+    "group_id": "id",
     "member": "username",
     "jwt": "key"
 }'
@@ -81,6 +90,7 @@ curl -X POST http://localhost:5001/ -H "Content-Type: application/json" -d '{
     "description": "text",
     "deadline": "some datetime",
     "todo_task": "True/False",
+    "member": ["first_member", "second", ...],
     "jwt": "key"
 }'
 
@@ -92,8 +102,8 @@ return_type {
 ### Delete task (complete task have the same command)
 ``` shell
 curl -X POST http://localhost:5001/ -H "Content-Type: application/json" -d '{
-    "type": "add_task",
-    "task_id",
+    "type": "delete_task",
+    "task_id": "id",
     "jwt": "key"
 }'
 ```
@@ -101,12 +111,13 @@ curl -X POST http://localhost:5001/ -H "Content-Type: application/json" -d '{
 ### Update task
 ``` shell
 curl -X POST http://localhost:5001/ -H "Content-Type: application/json" -d '{
-    "type": "add_task",
+    "type": "update_task",
     "task_id": "id"
     "task" "task text with len [1; 100]",
     "description": "text",
     "deadline": "some datetime",
     "todo_task": "True/False",
+    "member": ["first_member", "second", ...],
     "jwt": "key"
 }'
 ```
@@ -114,8 +125,8 @@ curl -X POST http://localhost:5001/ -H "Content-Type: application/json" -d '{
 ### Get tasks for group
 ``` shell
 curl -X POST http://localhost:5001/ -H "Content-Type: application/json" -d '{
-    "type": "add_task",
-    "group_id",
+    "type": "get_tasks_for_group",
+    "group_id": "id",
     "jwt": "key"
 }'
 

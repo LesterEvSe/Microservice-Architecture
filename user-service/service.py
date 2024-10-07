@@ -37,32 +37,107 @@ class UserHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         # Get data from other services
         post_data = self.rfile.read(int(self.headers['Content-Length']))
-        received_data = json.loads(post_data.decode('utf-8'))
+        data = json.loads(post_data.decode('utf-8'))
 
-        msg_type = received_data["type"]
+        msg_type = data["type"]
         if msg_type == "registration":
-            jwt_token = DB.register_user(received_data)
+            jwt_token = DB.register_user(data)
             
             if jwt_token[0]:
                 self._task_service_interaction(json.dumps({
                     "type": "get_groups",
-                    "username": received_data["username"]
+                    "username": data["username"]
                 }), jwt_token[1])
             else:
                 self._send_error(jwt_token[1])
+            return
 
         elif msg_type == "login":
-            jwt_token = DB.login_user(received_data)
+            jwt_token = DB.login_user(data)
 
             if jwt_token:
                 self._task_service_interaction(json.dumps({
                     "type": "get_groups",
-                    "username": received_data["username"]
+                    "username": data["username"]
                 }), jwt_token)
             else:
                 self._send_error("Incorrect login or password.")
+            return
 
-        #elif msg_type == "add_task":
+
+        check_jwt = DB.check_jwt(msg_type["jwt"])
+        if not check_jwt[0]:
+            self._send_error(check_jwt[1])
+            return
+
+        username = check_jwt[1]
+        if msg_type == "add_task":
+            self._task_service_interaction(json.dumps({
+                "type": "add_group",
+                "group": data["group"],
+                "admin": username
+            }))
+        
+        elif msg_type == "delete_group":
+            self._task_service_interaction(json.dumps({
+                "type": "delete_group",
+                "group_id": data["group_id"],
+                "admin": username
+            }))
+        
+        elif msg_type == "add_member_to_group":
+            self._task_service_interaction(json.dumps({
+                "type": "add_member_to_group",
+                "group_id": data["group_id"],
+                "member": data["member"],
+                "admin": username
+            }))
+        
+        elif msg_type == "delete_member_from_group":
+            self._task_service_interaction(json.dumps({
+                "type": "add_member_to_group",
+                "group_id": data["group_id"],
+                "member": data["member"],
+                "admin": username
+            }))
+        
+        elif msg_type == "add_task":
+            self._task_service_interaction(json.dumps({
+                "type": "add_task",
+                "group_id": data["group_id"],
+                "task": data["task"],
+                "description": data["description"],
+                "deadline": data["deadline"],
+                "todo_task": data["todo_task"],
+                "member": data["member"],  # Can be array of users
+                "user": username,  # The one who adds the task
+            }))
+        
+        elif msg_type == "delete_task":
+            self._task_service_interaction(json.dumps({
+                "type": "delete_task",
+                "task_id": data["task_id"],
+                "user": username,
+            }))
+        
+        elif msg_type == "update_task":
+            self._task_service_interaction(json.dumps({
+                "type": "update_task",
+                "task_id": data["task_id"],
+                "task": data["task"],
+                "description": data["description"],
+                "deadline": data["deadline"],
+                "todo_task": data["todo_task"],
+                "member": data["member"],
+                "user": username,
+            }))
+        
+        elif msg_type == "get_tasks_for_group":
+            self._task_service_interaction(json.dumps({
+                "type": "add_task",
+                "group_id": data["group_id"],
+                "member": username,
+            }))
 
 
     def send_to_service(self, to_port, json_data):

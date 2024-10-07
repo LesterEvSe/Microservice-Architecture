@@ -97,7 +97,7 @@ class UserService:
             return (False, json.dumps({"error": "User does not exist"}))
         if user_record[0] != jwt:
             return (False, json.dumps({"error": "JWT key does not correct"}))
-        return (True,)
+        return (True, username)
 
 
 
