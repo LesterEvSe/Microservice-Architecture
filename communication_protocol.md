@@ -103,6 +103,7 @@ return_type {
 ``` shell
 curl -X POST http://localhost:5001/ -H "Content-Type: application/json" -d '{
     "type": "delete_task",
+    "group_id": "id",
     "task_id": "id",
     "jwt": "key"
 }'
@@ -112,7 +113,8 @@ curl -X POST http://localhost:5001/ -H "Content-Type: application/json" -d '{
 ``` shell
 curl -X POST http://localhost:5001/ -H "Content-Type: application/json" -d '{
     "type": "update_task",
-    "task_id": "id"
+    "group_id": "id",
+    "task_id": "id",
     "task" "task text with len [1; 100]",
     "description": "text",
     "deadline": "some datetime",

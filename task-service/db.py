@@ -1,5 +1,4 @@
 import sqlite3
-import json
 
 class TaskService:
     def _create_tables(self):
@@ -71,27 +70,22 @@ class TaskService:
             for row in rows:
                 result["group_id"].append(row[0])
                 result["group"].append(row[1])
-            return json.dumps({"groups": result})
+            return result
 
         except Exception as e:
             print(f"Error in get_groups_for_user: {str(e)}")
-            return json.dumps({"error": "Can't get groups for this user."})
+            return False
 
-    def add_group(self, group, member, admin: bool) -> bool:
+    def add_group(self, group, member) -> bool:
         try:
             self.cursor.execute('''
                 INSERT INTO groups ("group", member, admin) 
-                VALUES (?, ?)
-            ''', (group, member, admin))
+                VALUES (?, ?, ?)
+            ''', (group, member, True))
             self.conn.commit()
             return True
         
-        except sqlite3.IntegrityError:
-            print(f"Error in add_group: {e}")
-            self.conn.rollback()
-            return False
-        
-        except Exception as e:
+        except (sqlite3.IntegrityError, Exception) as e:
             print(f"Error in add_group: {e}")
             self.conn.rollback()  # Скасуємо зміни в разі будь-якої іншої помилки
             return False
@@ -106,10 +100,14 @@ class TaskService:
     def delete_member_from_group(self, member, group_id) -> str:
         pass
 
-    def is_user_admin_of_group(self, username, group) -> bool:
+    def is_user_admin_of_group(self, username, group_id) -> bool:
         pass
 
-    def add_task(self, group, task, deadline, description, todo_task, member: list) -> bool:
+    def is_user_in_group(self, username, group_id) -> bool:
+        pass
+
+    # TODO need to recode
+    def add_task(self, group_id, task, deadline, description, todo_task, member: list) -> bool:
         try:
             # 1. Add task to certain table
             self.cursor.execute('''
@@ -132,16 +130,17 @@ class TaskService:
             self.conn.rollback()
             return False
 
-    # If the user is responsible for this task, or is an admin of the group
-    def delete_task(self, member, group_id, task_id):
+    # If the user is responsible for this task, or is an admin of the group.
+    # Perhaps this will be enough, the rest will be deleted thanks to FOREIGN KEY
+    def delete_task(self, task_id) -> bool:
         pass
         #self.cursor.execute('DELETE FROM task_data WHERE task = ?', (task,))
         #self.conn.commit()
     
-    def update_task(self, task_id, task, description, deadline, todo_task, member: list):
+    def update_task(self, task_id, task, description, deadline, todo_task, member: list) -> bool:
         pass
 
-    def get_tasks_for_group(self, member, group_id):
+    def get_tasks_for_group(self, group_id):
         pass
     
     

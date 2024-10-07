@@ -8,9 +8,7 @@ DB = UserService()
 
 class UserHandler(BaseHTTPRequestHandler):
     def _task_service_interaction(self, json_data, jwt=None):
-        task_data = json.loads(self.send_to_service(TASK_SERVICE, json_data))
-
-        # Can't do task_data[“error”] because of KeyError
+        task_data = self.send_to_service(TASK_SERVICE, json_data)
         if "error" in task_data:
             print(task_data)
             self._send_error(task_data["error"])
@@ -71,7 +69,7 @@ class UserHandler(BaseHTTPRequestHandler):
             return
 
         username = check_jwt[1]
-        if msg_type == "add_task":
+        if msg_type == "add_group":
             self._task_service_interaction(json.dumps({
                 "type": "add_group",
                 "group": data["group"],
@@ -116,6 +114,7 @@ class UserHandler(BaseHTTPRequestHandler):
         elif msg_type == "delete_task":
             self._task_service_interaction(json.dumps({
                 "type": "delete_task",
+                "group_id": data["group_id"],
                 "task_id": data["task_id"],
                 "user": username,
             }))
@@ -123,6 +122,7 @@ class UserHandler(BaseHTTPRequestHandler):
         elif msg_type == "update_task":
             self._task_service_interaction(json.dumps({
                 "type": "update_task",
+                "group_id": data["group_id"],
                 "task_id": data["task_id"],
                 "task": data["task"],
                 "description": data["description"],
@@ -136,14 +136,12 @@ class UserHandler(BaseHTTPRequestHandler):
             self._task_service_interaction(json.dumps({
                 "type": "add_task",
                 "group_id": data["group_id"],
-                "member": username,
+                "user": username,
             }))
 
 
     def send_to_service(self, to_port, json_data):
         service_url = f'http://localhost:{to_port}/'
-
-        print(json_data)
         try:
             response = requests.post(service_url, headers={'Content-Type': 'application/json'}, data=json_data)
             if response.status_code == 200:
