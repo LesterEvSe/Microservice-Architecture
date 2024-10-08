@@ -1,0 +1,5 @@
+FROM python:3.10-slim
+RUN pip install psycopg2-binary
+WORKDIR /user-service
+COPY . /user-service
+CMD ["python", "temp_main.py"]
