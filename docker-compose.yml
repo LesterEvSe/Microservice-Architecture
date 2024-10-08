@@ -2,7 +2,7 @@ services:
   user-db:
     build:
       context: .
-      dockerfile: user-service/Dockerfile.postgres
+      dockerfile: user-service/postgresql.dockerfile
     environment:
       POSTGRES_USER: user_admin
       POSTGRES_PASSWORD: eighty9@doublet
@@ -15,7 +15,7 @@ services:
   user-service:
     build:
       context: .
-      dockerfile: user-service/Dockerfile.service
+      dockerfile: user-service/service.dockerfile
     depends_on:
       - user-db
     environment:
@@ -30,7 +30,7 @@ services:
   task-db:
     build:
       context: .
-      dockerfile: task-service/Dockerfile.postgres
+      dockerfile: task-service/postgresql.dockerfile
     environment:
       POSTGRES_USER: task_admin
       POSTGRES_PASSWORD: A7noth56therUser
@@ -43,7 +43,7 @@ services:
   task-service:
     build:
       context: .
-      dockerfile: task-service/Dockerfile.service
+      dockerfile: task-service/service.dockerfile
     depends_on:
       - task-db
     environment:

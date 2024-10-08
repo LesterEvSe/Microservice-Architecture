@@ -4,4 +4,6 @@ WORKDIR /user-service
 COPY . /user-service
 
 EXPOSE 5001
+
+# Maybe bad idea, but it works
 CMD ["sh", "-c", "sleep 10 && python user-service/main.py"]
