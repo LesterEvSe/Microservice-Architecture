@@ -1,4 +1,5 @@
-import sqlite3
+import sqlite3  # TODO delete later
+import psycopg2
 import json
 import jwt
 import datetime
@@ -25,29 +26,34 @@ def decode_jwt(jwt_token):
 
 
 class UserService:
-    def __init__(self, db_path='users.db'):
-        # Create new DB, if doesn't exist
-        self.conn = sqlite3.connect(db_path)
+    def __init__(self, dbname, user, password, host, port):
+        self.conn = psycopg2.connect(
+            dbname=dbname,
+            user=user,
+            password=password,
+            host=host,
+            port=port
+        )
         self.cursor = self.conn.cursor()
-        self.db_path = db_path
-        
+
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS registration (
-                email TEXT NOT NULL UNIQUE,
-                username TEXT NOT NULL CHECK (LENGTH(username) >= 4 AND LENGTH(username) <= 50) UNIQUE,
-                password TEXT NOT NULL CHECK (LENGTH(password) >= 4 AND LENGTH(password) <= 50),
+                email VARCHAR(255) NOT NULL UNIQUE,
+                username VARCHAR(50) NOT NULL CHECK (LENGTH(username) >= 4 AND LENGTH(username) <= 50) UNIQUE,
+                password VARCHAR(50) NOT NULL CHECK (LENGTH(password) >= 4 AND LENGTH(password) <= 50),
                 jwt TEXT NOT NULL,
-                
+    
                 PRIMARY KEY (email, username)
-            )
-        ''')
+            );
+            ''')
         self.conn.commit()
-        print(f"{self.db_path} created or verified successfully!")
+        print(f"Database '{dbname}' created or verified successfully!")
 
     def __del__(self):
         self.cursor.close()
         self.conn.close()
-        print(f"Connection to DB {self.db_path} closed.")
+        print("Connection to the user-service database closed.")
+
 
     def register_user(self, json_data):
         email = json_data['email']

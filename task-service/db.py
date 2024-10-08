@@ -1,15 +1,15 @@
-import sqlite3
+import psycopg2
 
 class TaskService:
     def _create_tables(self):
         # task_data. Must be initialized before group_data table
-        # task_id PRIMARY KEY not task, because can the same task in the different groups
+        # task_id PRIMARY KEY not task, because the same task can exist in different groups
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS task_data (
-                task_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                task TEXT NOT NULL CHECK (LENGTH(task) >= 1 AND LENGTH(task) <= 100),
+                task_id SERIAL PRIMARY KEY,
+                task_name VARCHAR(100) NOT NULL CHECK (LENGTH(task_name) >= 1 AND LENGTH(task_name) <= 100),
                 description TEXT,
-                deadline DATETIME NOT NULL,
+                deadline TIMESTAMPTZ NOT NULL,
                 todo_task BOOLEAN NOT NULL
             )
         ''')
@@ -17,45 +17,48 @@ class TaskService:
         # groups. Must be initialized before group_data table
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS groups (
-                group_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                "group" TEXT NOT NULL CHECK (LENGTH("group") >= 1 AND LENGTH("group") <= 100),
-                member TEXT NOT NULL CHECK (LENGTH(member) >= 4 AND LENGTH(member) <= 50),
+                group_id SERIAL PRIMARY KEY,
+                group_name VARCHAR(100) NOT NULL CHECK (LENGTH(group_name) >= 1 AND LENGTH(group_name) <= 100),
+                member VARCHAR(50) NOT NULL CHECK (LENGTH(member) >= 4 AND LENGTH(member) <= 50),
                 admin BOOLEAN NOT NULL
             )
         ''')
 
         # group_data
         # ON DELETE CASCADE explanation below.
-        # If we delete the parent table data, it will be automatically deleted data here as well
+        # If we delete the parent table data, it will automatically delete data here as well
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS group_data (
-                group_id TEXT NOT NULL CHECK (LENGTH("group") >= 1 AND LENGTH("group") <= 100),
+                group_id INTEGER NOT NULL,
                 task_id INTEGER NOT NULL,
-                member TEXT NOT NULL CHECK (LENGTH(member) >= 4 AND LENGTH(member) <= 50),
+                member VARCHAR(50) NOT NULL CHECK (LENGTH(member) >= 4 AND LENGTH(member) <= 50),
                 
                 FOREIGN KEY (group_id) REFERENCES groups(group_id) ON DELETE CASCADE,
                 FOREIGN KEY (task_id) REFERENCES task_data(task_id) ON DELETE CASCADE,
-                FOREIGN KEY (member) REFERENCES groups(member) ON DELETE CASCADE,
                 
                 PRIMARY KEY (group_id, task_id, member)
             )
         ''')
 
-    def __init__(self, db_path='tasks.db'):
-        # Create new DB, if doesn't exist
-        self.conn = sqlite3.connect(db_path)
-        self.cursor = self.conn.cursor()  # allow us to use DB operations
-        self.db_path = db_path
-        self.cursor.execute('PRAGMA foreign_keys = ON')
+    def __init__(self, dbname, user, password, host, port):
+        # Create a new DB connection, if it doesn't exist
+        self.conn = psycopg2.connect(
+            dbname=dbname,
+            user=user,
+            password=password,
+            host=host,
+            port=port
+        )
+        self.cursor = self.conn.cursor()
 
         self._create_tables()
         self.conn.commit()
-        print(f"{self.db_path} created or verified successfully!")
+        print(f"Database '{dbname}' created or verified successfully!")
 
     def __del__(self):
         self.cursor.close()
         self.conn.close()
-        print(f"Connection to DB {self.db_path} closed.")
+        print(f"Connection to the task-service database closed.")
 
     def get_groups_for_user(self, username):
         try:

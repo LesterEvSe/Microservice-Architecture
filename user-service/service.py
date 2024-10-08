@@ -4,7 +4,7 @@ import requests
 from db import UserService
 
 TASK_SERVICE=5002
-DB = UserService()
+DB = UserService(dbname="users", user="user_admin", password="eighty9@doublet", host="user-db", port="5432")
 
 class UserHandler(BaseHTTPRequestHandler):
     def _task_service_interaction(self, json_data, jwt=None):

@@ -2,9 +2,7 @@ from http.server import BaseHTTPRequestHandler
 import json
 from db import TaskService
 
-# Maybe does not need
-USER_SERVICE=5001
-DB = TaskService()
+DB = TaskService(dbname="tasks", user="task_admin", password="A7noth56therUser", host="task-db", port="5432")
 
 class TaskHandler(BaseHTTPRequestHandler):
     def _send_error(self, error_msg):

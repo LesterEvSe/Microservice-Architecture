@@ -1,0 +1,60 @@
+services:
+  user-db:
+    build:
+      context: .
+      dockerfile: user-service/Dockerfile.postgres
+    environment:
+      POSTGRES_USER: user_admin
+      POSTGRES_PASSWORD: eighty9@doublet
+      POSTGRES_DB: users
+    volumes:
+      - user_postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  user-service:
+    build:
+      context: .
+      dockerfile: user-service/Dockerfile.service
+    depends_on:
+      - user-db
+    environment:
+      DB_HOST: user-db
+      DB_PORT: 5432
+      DB_NAME: users
+      DB_USER: user_admin
+      DB_PASS: eighty9@doublet
+    ports:
+      - "5001:5001"
+  
+  task-db:
+    build:
+      context: .
+      dockerfile: task-service/Dockerfile.postgres
+    environment:
+      POSTGRES_USER: task_admin
+      POSTGRES_PASSWORD: A7noth56therUser
+      POSTGRES_DB: tasks
+    volumes:
+      - task_postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"  # Outer 5433 port
+
+  task-service:
+    build:
+      context: .
+      dockerfile: task-service/Dockerfile.service
+    depends_on:
+      - task-db
+    environment:
+      DB_HOST: task-db
+      DB_PORT: 5432
+      DB_NAME: tasks
+      DB_USER: task_admin
+      DB_PASS: A7noth56therUser
+    ports:
+      - "5002:5002"
+
+volumes:
+  user_postgres_data:
+  task_postgres_data:
