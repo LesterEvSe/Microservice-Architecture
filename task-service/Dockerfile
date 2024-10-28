@@ -4,4 +4,6 @@ WORKDIR /task-service
 COPY . /task-service
 
 EXPOSE 5002
+
+# Maybe bad idea, but it works
 CMD ["sh", "-c", "sleep 10 && python task-service/main.py"]
