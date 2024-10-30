@@ -30,87 +30,27 @@ class UserDB:
         self.conn.close()
         print("Connection to the user-service database closed.")
 
+    def get_jwt_for_username(self, username):
+        self.cursor.execute('SELECT jwt FROM registration WHERE username = %s', (username,))
+        return self.cursor.fetchone()
+    
+    def is_username_exist(self, username) -> bool:
+        self.cursor.execute('SELECT * FROM registration WHERE username = %s', (username,))
+        return self.cursor.fetchone()
+
+    def is_user_email_exist(self, user_email) -> bool:
+        self.cursor.execute('SELECT * FROM registration WHERE email = %s', (user_email,))
+        return self.cursor.fetchone()
+    
+    def is_password_correct(self, user: User) -> bool:
+        self.cursor.execute('SELECT password FROM registration WHERE username = %s', (user.username,))
+        return self.cursor.fetchone()[0] == user.password
+
+    def update_jwt_for_user(self, user: User):
+        self.cursor.execute('UPDATE registration SET jwt = %s WHERE username = %s', (user.jwt_token, user.username))
+        self.conn.commit()
 
     def register_user(self, user: User):
-        self.cursor.execute('SELECT * FROM registration WHERE email = %s', (user.email,))
-        if self.cursor.fetchone():
-            return (False, "Email already exists.")
-
-        self.cursor.execute('SELECT * FROM registration WHERE username = %s', (user.username,))
-        if self.cursor.fetchone():
-            return (False, "Username already exists.")
-        
         self.cursor.execute('INSERT INTO registration (email, username, password, jwt) VALUES (%s, %s, %s, %s)',
                             (user.email, user.username, user.password, user.jwt_token))
         self.conn.commit()
-        return (True,)
-    
-    def login_user(self, user: User):
-        # Check if user exist
-        self.cursor.execute('SELECT password FROM registration WHERE username = %s', (user.username,))
-        user_record = self.cursor.fetchone()
-        if user_record is None or user_record[0] != user.password:
-            return False
-        
-        self.cursor.execute('UPDATE registration SET jwt = %s WHERE username = %s', (user.jwt_token, user.username))
-        self.conn.commit()
-        return True
-    
-    def check_jwt(self, username, jwt):
-        self.cursor.execute('SELECT jwt FROM registration WHERE username = %s', (username,))
-        user_record = self.cursor.fetchone()
-
-        if user_record is None:
-            return (False, {"error": "User does not exist"})
-        if user_record[0] != jwt:
-            return (False, {"error": "JWT key does not correct"})
-        return (True, username)
-
-
-
-#########
-# TESTS #
-#########
-import os
-#import json
-
-def test_user_service():
-    db_path = 'Test.db'
-    user_service = UserDB(db_path)
-    register_data = json.dumps({
-        'email': 'test0@example.com',
-        'username': 'Test0',
-        'password': '1234at'
-    })
-
-    # Registration
-    registration_result = user_service.register_user(register_data)
-    assert(registration_result == True)
-
-    reg_res2 = user_service.register_user(register_data)
-    assert(reg_res2 == False)
-
-    login_data_correct = json.dumps({
-        'username': 'Test0',
-        'password': '1234at'
-    })
-    login_result = user_service.login_user(login_data_correct)
-    assert(login_result == True)
-
-
-    login_data_wrong_username = json.dumps({
-        'username': 'unknown_name',
-        'password': '1234at'
-    })
-    login_result_username = user_service.login_user(login_data_wrong_username)
-    assert(login_result_username == False)
-
-    login_data_wrong_password = json.dumps({
-        'username': 'Test0',
-        'password': 'wrong_password'
-    })
-    login_result_password = user_service.login_user(login_data_wrong_password)
-    assert(login_result_password == False)
-    os.remove(db_path)
-
-# test_user_service()

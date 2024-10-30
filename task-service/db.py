@@ -1,6 +1,6 @@
 import psycopg2
 
-class TaskService:
+class TaskDB:
     def _create_tables(self):
         # task_data. Must be initialized before group_data table
         # task_id PRIMARY KEY not task, because the same task can exist in different groups

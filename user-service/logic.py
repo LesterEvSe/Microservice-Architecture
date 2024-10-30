@@ -31,20 +31,35 @@ def _decode_jwt(jwt_token):
 def get_username_and_check_jwt(jwt_token):
     username = _decode_jwt(jwt_token)
     if not username[0]:
-        return (False, {"error": username[1]})
+        return (False, username[1])
     username = username[1]
-    return DB.check_jwt(username, jwt_token)
+
+    if not DB.is_username_exist(username):
+        return (False, "User doesn't exist.")
+    
+    db_jwt_token = DB.get_jwt_for_username(username)
+    if db_jwt_token != jwt_token:
+        return (False, "JWT key doesn't correct.")
+    return (True, username)
 
 def register_user(user_dto: UserDTO):
     user = dto_to_user_entity(user_dto)
     user.jwt_token = _generate_jwt(user.username)
+
+    if DB.is_user_email_exist(user.email):
+        return (False, "Email already exists.")
+    if DB.is_username_exist(user.username):
+        return (False, "Username already exists.")
     
-    res = DB.register_user(user)
-    if not res[0]:
-        return res
-    return (res[0], user.jwt_token)
+    DB.register_user(user)
+    return (True, user.jwt_token)
 
 def login_user(user_dto: UserDTO):
     user = dto_to_user_entity(user_dto)
     user.jwt_token = _generate_jwt(user.username)
-    return DB.login_user(user)
+
+    if not DB.is_username_exist(user.username):
+        return (False, "User doesn't exist.")
+    if not DB.is_password_correct(user):
+        return (False, "Login or password doesn't correct.")
+    DB.update_jwt_for_user(user)
