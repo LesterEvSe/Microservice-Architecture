@@ -1,10 +1,10 @@
 from http.server import BaseHTTPRequestHandler
 import json
 import requests
-from db import UserService
+import logic
+from Data.UserDTO import *
 
 TASK_SERVICE=5002
-DB = UserService(dbname="users", user="user_admin", password="eighty9@doublet", host="user-db", port="5432")
 
 class UserHandler(BaseHTTPRequestHandler):
     def _task_service_interaction(self, json_data, jwt=None):
@@ -38,32 +38,42 @@ class UserHandler(BaseHTTPRequestHandler):
         data = json.loads(post_data.decode('utf-8'))
 
         msg_type = data["type"]
+
         if msg_type == "registration":
-            jwt_token = DB.register_user(data)
-            
+            user_dto = logic.json_to_user_dto(data)
+            if not user_dto[0]:
+                self._send_error(user_dto[1])
+                return
+            user_dto = user_dto[1]
+
+            jwt_token = logic.register_user(user_dto)
             if jwt_token[0]:
                 self._task_service_interaction(json.dumps({
                     "type": "get_groups",
-                    "username": data["username"]
+                    "username": user_dto.username
                 }), jwt_token[1])
             else:
                 self._send_error(jwt_token[1])
             return
 
         elif msg_type == "login":
-            jwt_token = DB.login_user(data)
+            user_dto = logic.json_to_user_dto(data)
+            if not user_dto[0]:
+                self._send_error(user_dto[1])
+                return
+            user_dto = user_dto[1]
 
+            jwt_token = logic.login_user(user_dto)
             if jwt_token:
                 self._task_service_interaction(json.dumps({
                     "type": "get_groups",
-                    "username": data["username"]
+                    "username": user_dto.username
                 }), jwt_token)
             else:
                 self._send_error("Incorrect login or password.")
             return
 
-
-        check_jwt = DB.check_jwt(msg_type["jwt"])
+        check_jwt = logic.get_username_and_check_jwt(msg_type["jwt"])
         if not check_jwt[0]:
             self._send_error(check_jwt[1])
             return
@@ -141,9 +151,10 @@ class UserHandler(BaseHTTPRequestHandler):
 
 
     def send_to_service(self, to_port, json_data):
-        service_url = f'http://localhost:{to_port}/'
+        service_url = f'http://task-service:{to_port}/'
         try:
             response = requests.post(service_url, headers={'Content-Type': 'application/json'}, data=json_data)
+
             if response.status_code == 200:
                 return response.json()
             else:

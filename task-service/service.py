@@ -6,6 +6,7 @@ DB = TaskService(dbname="tasks", user="task_admin", password="A7noth56therUser",
 
 class TaskHandler(BaseHTTPRequestHandler):
     def _send_error(self, error_msg):
+        print("here", flush=True)
         self.send_response(500)
         self.end_headers()
         self.wfile.write(json.dumps({

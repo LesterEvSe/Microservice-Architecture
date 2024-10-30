@@ -17,6 +17,7 @@ services:
     depends_on:
       - user-db
     environment:
+      PYTHONUNBUFFERED: 1  # For auto flush
       DB_HOST: user-db
       DB_PORT: 5432
       DB_NAME: users
@@ -43,6 +44,7 @@ services:
     depends_on:
       - task-db
     environment:
+      PYTHONUNBUFFERED: 1  # for auto flush
       DB_HOST: task-db
       DB_PORT: 5432
       DB_NAME: tasks

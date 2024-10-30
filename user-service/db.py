@@ -1,31 +1,7 @@
-import sqlite3  # TODO delete later
 import psycopg2
-import json
-import jwt
-import datetime
+from Entity.User import *
 
-SECRET_KEY = "OK_6SOME_SE5CRET"
-
-# The data is hashed using an HS256 signature,
-# so it cannot be tampered with (at least at the time of writing the program :D).
-def generate_jwt(username):
-    expiration = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=365 * 100)
-    return jwt.encode({
-        'username': username,
-        'exp': expiration,
-    }, SECRET_KEY, algorithm='HS256')
-
-def decode_jwt(jwt_token):
-    try:
-        token = jwt.decode(jwt_token, SECRET_KEY, algorithms=['HS256'])
-        return (True, token['username'])
-    except jwt.ExpiredSignatureError:
-        return (False, "JWT token has expired")
-    except jwt.InvalidTokenError:
-        return (False, "Invalid JWT token")
-
-
-class UserService:
+class UserDB:
     def __init__(self, dbname, user, password, host, port):
         self.conn = psycopg2.connect(
             dbname=dbname,
@@ -55,54 +31,39 @@ class UserService:
         print("Connection to the user-service database closed.")
 
 
-    def register_user(self, json_data):
-        email = json_data['email']
-        username = json_data['username']
-        password = json_data['password']
-
-        self.cursor.execute('SELECT * FROM registration WHERE email = ?', (email,))
+    def register_user(self, user: User):
+        self.cursor.execute('SELECT * FROM registration WHERE email = %s', (user.email,))
         if self.cursor.fetchone():
             return (False, "Email already exists.")
 
-        self.cursor.execute('SELECT * FROM registration WHERE username = ?', (username,))
+        self.cursor.execute('SELECT * FROM registration WHERE username = %s', (user.username,))
         if self.cursor.fetchone():
             return (False, "Username already exists.")
         
-        jwt_token = generate_jwt(username)
-        self.cursor.execute('INSERT INTO registration (email, username, password, jwt) VALUES (?, ?, ?, ?)',
-                            (email, username, password, jwt_token))
+        self.cursor.execute('INSERT INTO registration (email, username, password, jwt) VALUES (%s, %s, %s, %s)',
+                            (user.email, user.username, user.password, user.jwt_token))
         self.conn.commit()
-        return (True, jwt_token)
+        return (True,)
     
-    def login_user(self, json_data):
-        username = json_data['username']
-        password = json_data['password']
-
+    def login_user(self, user: User):
         # Check if user exist
-        self.cursor.execute('SELECT password FROM registration WHERE username = ?', (username,))
+        self.cursor.execute('SELECT password FROM registration WHERE username = %s', (user.username,))
         user_record = self.cursor.fetchone()
-        if user_record is None or user_record[0] != password:
+        if user_record is None or user_record[0] != user.password:
             return False
         
-        jwt_token = generate_jwt(username)
-        self.cursor.execute('UPDATE registration SET jwt = ? WHERE username = ?', (jwt_token, username))
+        self.cursor.execute('UPDATE registration SET jwt = %s WHERE username = %s', (user.jwt_token, user.username))
         self.conn.commit()
-        return jwt_token
+        return True
     
-    # If None, then correct
-    def check_jwt(self, jwt):
-        username = decode_jwt(jwt)
-        if not username[0]:
-            return (False, json.dumps({"error": username[1]}))
-        username = username[1]
-        
-        self.cursor.execute('SELECT jwt FROM registration WHERE username = ?', (username,))
+    def check_jwt(self, username, jwt):
+        self.cursor.execute('SELECT jwt FROM registration WHERE username = %s', (username,))
         user_record = self.cursor.fetchone()
 
         if user_record is None:
-            return (False, json.dumps({"error": "User does not exist"}))
+            return (False, {"error": "User does not exist"})
         if user_record[0] != jwt:
-            return (False, json.dumps({"error": "JWT key does not correct"}))
+            return (False, {"error": "JWT key does not correct"})
         return (True, username)
 
 
@@ -111,10 +72,11 @@ class UserService:
 # TESTS #
 #########
 import os
+#import json
 
 def test_user_service():
     db_path = 'Test.db'
-    user_service = UserService(db_path)
+    user_service = UserDB(db_path)
     register_data = json.dumps({
         'email': 'test0@example.com',
         'username': 'Test0',
