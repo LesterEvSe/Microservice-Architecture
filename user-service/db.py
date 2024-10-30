@@ -46,8 +46,12 @@ class UserDB:
         self.cursor.execute('SELECT password FROM registration WHERE username = %s', (user.username,))
         return self.cursor.fetchone()[0] == user.password
 
-    def update_jwt_for_user(self, user: User):
-        self.cursor.execute('UPDATE registration SET jwt = %s WHERE username = %s', (user.jwt_token, user.username))
+    def update_user_data_with_username(self, username, user: User):
+        self.cursor.execute('''
+            UPDATE registration 
+            SET email = %s, username = %s, password = %s, jwt = %s 
+            WHERE username = %s
+        ''', (user.email, user.username, user.password, user.jwt_token, username))
         self.conn.commit()
 
     def register_user(self, user: User):

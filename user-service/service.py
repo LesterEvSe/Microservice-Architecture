@@ -57,7 +57,10 @@ class UserHandler(BaseHTTPRequestHandler):
             return
 
         elif msg_type == "login":
+            # plug for email, because we don't need it for login
+            data["email"] = "plug"
             user_dto = logic.json_to_user_dto(data)
+            
             if not user_dto[0]:
                 self._send_error(user_dto[1])
                 return

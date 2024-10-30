@@ -62,4 +62,6 @@ def login_user(user_dto: UserDTO):
         return (False, "User doesn't exist.")
     if not DB.is_password_correct(user):
         return (False, "Login or password doesn't correct.")
-    DB.update_jwt_for_user(user)
+    
+    DB.update_user_data_with_username(user.username, user)
+    return (True, user.jwt_token)
