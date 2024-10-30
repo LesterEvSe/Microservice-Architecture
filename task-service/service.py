@@ -1,8 +1,5 @@
 from http.server import BaseHTTPRequestHandler
 import json
-from db import TaskDB
-
-DB = TaskDB(dbname="tasks", user="task_admin", password="A7noth56therUser", host="task-db", port="5432")
 
 class TaskHandler(BaseHTTPRequestHandler):
     def _send_error(self, error_msg):
@@ -18,6 +15,10 @@ class TaskHandler(BaseHTTPRequestHandler):
         self.send_header('Content-type', 'application/json')
         self.end_headers()
         self.wfile.write(json.dumps(json_data).encode('utf-8'))
+    
+    # Can pass function as arg instead of _send_data and _send_error control flow.
+    def _logic_communication(self):
+        pass
     
     def do_POST(self):
         post_data = self.rfile.read(int(self.headers['Content-Length']))
