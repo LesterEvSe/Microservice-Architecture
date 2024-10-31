@@ -1,4 +1,22 @@
 services:
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "5000:5000"
+  
+  search:
+    build:
+      context: ./search
+    ports:
+      - "5010:5010"
+  
+  calendar:
+    build:
+      context: ./calendar
+    ports:
+      - "5005:5005"
+    
   user-db:
     image: postgres:latest
     environment:

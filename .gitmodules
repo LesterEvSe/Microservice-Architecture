@@ -1,0 +1,9 @@
+[submodule "frontend"]
+	path = frontend
+	url = https://github.com/AndriiMelnichuk/frontend
+[submodule "calendar"]
+	path = calendar
+	url = https://github.com/AndriiMelnichuk/calendar
+[submodule "search"]
+	path = search
+	url = https://github.com/AndriiMelnichuk/search

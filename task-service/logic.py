@@ -21,7 +21,7 @@ def delete_member_from_group(member, group: GroupDTO):
 def add_task(username, task: TaskDTO):
     pass
 
-def delete_task(username, task: TaskDTO):
+def delete_task_by_id(username, task: TaskDTO):
     pass
 
 def update_task(username, task: TaskDTO):
