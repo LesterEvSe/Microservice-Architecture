@@ -8,12 +8,16 @@ services:
   search:
     build:
       context: ./search
+    environment:
+      PYTHONUNBUFFERED: 1  # For auto flush
     ports:
       - "5010:5010"
   
   calendar:
     build:
       context: ./calendar
+    environment:
+      PYTHONUNBUFFERED: 1
     ports:
       - "5005:5005"
     
@@ -30,12 +34,11 @@ services:
 
   user-service:
     build:
-      context: .
-      dockerfile: user-service/Dockerfile
+      context: ./user-service
     depends_on:
       - user-db
     environment:
-      PYTHONUNBUFFERED: 1  # For auto flush
+      PYTHONUNBUFFERED: 1
       DB_HOST: user-db
       DB_PORT: 5432
       DB_NAME: users
@@ -57,12 +60,11 @@ services:
 
   task-service:
     build:
-      context: .
-      dockerfile: task-service/Dockerfile
+      context: ./task-service
     depends_on:
       - task-db
     environment:
-      PYTHONUNBUFFERED: 1  # for auto flush
+      PYTHONUNBUFFERED: 1
       DB_HOST: task-db
       DB_PORT: 5432
       DB_NAME: tasks
