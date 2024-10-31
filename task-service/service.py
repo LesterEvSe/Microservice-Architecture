@@ -1,6 +1,10 @@
 from http.server import BaseHTTPRequestHandler
 import json
 
+from logic import *
+from Data.GroupDTO import *
+
+
 class TaskHandler(BaseHTTPRequestHandler):
     def _send_error(self, error_msg):
         print("here", flush=True)
@@ -10,11 +14,11 @@ class TaskHandler(BaseHTTPRequestHandler):
             "error": error_msg
         }).encode('utf-8'))
     
-    def _send_data(self, json_data):
+    def _send_data(self, dict_data):
         self.send_response(200)
         self.send_header('Content-type', 'application/json')
         self.end_headers()
-        self.wfile.write(json.dumps(json_data).encode('utf-8'))
+        self.wfile.write(json.dumps(dict_data).encode('utf-8'))
     
     # Can pass function as arg instead of _send_data and _send_error control flow.
     def _logic_communication(self):
@@ -26,16 +30,11 @@ class TaskHandler(BaseHTTPRequestHandler):
 
         msg_type = data["type"]
         if msg_type == "get_groups":
-            json_data = DB.get_groups_for_user(data["username"])
-            if json_data:
-                self._send_data(json_data)
-            else:
-                self._send_error("Something went wrong.")
+            self._send_data(get_groups_for_username(data["username"]))
 
         elif msg_type == "add_group":
-            json_data = DB.add_group(data["group"], data["admin"])
-            if json_data:
-                self._send_data(json_data)
+            if add_group(json_to_group_dto(data)):
+                self._send_data({})
             else:
                 self._send_error("Something went wrong.")
         

@@ -43,8 +43,7 @@ def get_username_and_check_jwt(jwt_token):
     return (True, username)
 
 def register_user(user_dto: UserDTO):
-    user = dto_to_user_entity(user_dto)
-    user.jwt_token = _generate_jwt(user.username)
+    user = dto_to_user_entity(user_dto, _generate_jwt(user_dto.username))
 
     if DB.is_user_email_exist(user.email):
         return (False, "Email already exists.")
@@ -55,8 +54,7 @@ def register_user(user_dto: UserDTO):
     return (True, user.jwt_token)
 
 def login_user(user_dto: UserDTO):
-    user = dto_to_user_entity(user_dto)
-    user.jwt_token = _generate_jwt(user.username)
+    user = dto_to_user_entity(user_dto, _generate_jwt(user_dto.username))
 
     if not DB.is_username_exist(user.username):
         return (False, "User doesn't exist.")

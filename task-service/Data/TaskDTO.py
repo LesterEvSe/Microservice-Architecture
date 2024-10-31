@@ -1,0 +1,2 @@
+class TaskDTO:
+    pass

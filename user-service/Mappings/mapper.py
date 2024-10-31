@@ -14,8 +14,8 @@ def json_to_user_dto(json_data):
     except (TypeError, ValueError) as e:
         return (False, f"error when extracting data: {e}")
 
-def dto_to_user_entity(user_dto: UserDTO):
-    return User(username=user_dto.username, email=user_dto.email, password=user_dto.password, jwt_token=None)
+def dto_to_user_entity(user_dto: UserDTO, jwt_token):
+    return User(username=user_dto.username, email=user_dto.email, password=user_dto.password, jwt_token=jwt_token)
 
 def user_entity_to_dto(user: User):
     return UserDTO(username=user.username, email=user.email, password=user.password)

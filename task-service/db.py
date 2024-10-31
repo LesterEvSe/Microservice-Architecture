@@ -1,4 +1,5 @@
 import psycopg2
+from Entity.Group import *
 
 class TaskDB:
     def _create_tables(self):
@@ -60,38 +61,26 @@ class TaskDB:
         self.conn.close()
         print(f"Connection to the task-service database closed.")
 
-    def get_groups_for_user(self, username):
-        try:
-            self.cursor.execute('''
-                SELECT DISTINCT g.group_id, g."group"
-                FROM groups g
-                WHERE g.member = ?
-            ''', (username,))
-            rows = self.cursor.fetchall()
+    def get_groups_for_username(self, username):
+        self.cursor.execute('''
+            SELECT DISTINCT group_id, group_name
+            FROM groups
+            WHERE member = %s
+        ''', (username,))
+        rows = self.cursor.fetchall()
         
-            result = {"group_id": [], "group": []}
-            for row in rows:
-                result["group_id"].append(row[0])
-                result["group"].append(row[1])
-            return result
+        result = {"group_id": [], "group": []}
+        for row in rows:
+            result["group_id"].append(row[0])
+            result["group"].append(row[1])
+        return result
 
-        except Exception as e:
-            print(f"Error in get_groups_for_user: {str(e)}")
-            return False
-
-    def add_group(self, group, member) -> bool:
-        try:
-            self.cursor.execute('''
-                INSERT INTO groups ("group", member, admin) 
-                VALUES (?, ?, ?)
-            ''', (group, member, True))
-            self.conn.commit()
-            return True
-        
-        except (sqlite3.IntegrityError, Exception) as e:
-            print(f"Error in add_group: {e}")
-            self.conn.rollback()  # Скасуємо зміни в разі будь-якої іншої помилки
-            return False
+    def add_group(self, group: Group):
+        self.cursor.execute('''
+            INSERT INTO groups ("group", member, admin) 
+            VALUES (?, ?, ?)
+        ''', (group.group_name, group.member, group.admin))
+        self.conn.commit()
     
     # Next 3 methods only for group admins
     def delete_group(self, group_id) -> str:

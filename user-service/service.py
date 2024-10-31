@@ -10,7 +10,6 @@ class UserHandler(BaseHTTPRequestHandler):
     def _task_service_interaction(self, json_data, jwt=None):
         task_data = self.send_to_service(TASK_SERVICE, json_data)
         if "error" in task_data:
-            print(task_data)
             self._send_error(task_data["error"])
             return
 
@@ -76,7 +75,7 @@ class UserHandler(BaseHTTPRequestHandler):
                 self._send_error("Incorrect login or password.")
             return
 
-        check_jwt = logic.get_username_and_check_jwt(msg_type["jwt"])
+        check_jwt = logic.get_username_and_check_jwt(data["jwt"])
         if not check_jwt[0]:
             self._send_error(check_jwt[1])
             return
