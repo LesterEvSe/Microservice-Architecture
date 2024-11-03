@@ -137,6 +137,7 @@ return_type {
     "task_name": ["name0", ...],
     "description": ["desc0", ...],
     "deadline": ["deadline0", ...],
+    "members": [["member00", "member01", ...], ["member10", ...], ...],
     "todo_task": ["todo_task0", ...]
 }
 ```
