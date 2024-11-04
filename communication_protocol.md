@@ -19,8 +19,6 @@ curl -X POST http://localhost:5001/ -H "Content-Type: application/json" -d '{
 }'
 
 return_type {
-    "group_id": ["id0", ...],
-    "group_name": ["name0", ...],
     "jwt": "key"
 }
 ```
@@ -34,8 +32,6 @@ curl -X POST http://localhost:5001/ -H "Content-Type: application/json" -d '{
 }'
 
 return_type {
-    "group_id": ["id0", ...],
-    "group_name": ["name0", ...],
     "jwt": "key"
 }
 ```
@@ -44,13 +40,12 @@ return_type {
 ``` shell
 curl -X POST http://localhost:5001/ -H "Content-Type: application/json" -d '{
     "type": "get_groups",
-    "group": "name",
     "jwt": "key"
 }'
 
 return_type {
-    "group_id": ["group_id0", ...]
-    "group_name": ["group_name0", ...]
+    "group_id": ["id0", ...]
+    "group_name": ["name0", ...]
 }
 ```
 
