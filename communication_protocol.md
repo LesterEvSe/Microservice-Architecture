@@ -40,6 +40,20 @@ return_type {
 }
 ```
 
+### Get Groups
+``` shell
+curl -X POST http://localhost:5001/ -H "Content-Type: application/json" -d '{
+    "type": "get_groups",
+    "group": "name",
+    "jwt": "key"
+}'
+
+return_type {
+    "group_id": ["group_id0", ...]
+    "group_name": ["group_name0", ...]
+}
+```
+
 ### Add Group
 ``` shell
 curl -X POST http://localhost:5001/ -H "Content-Type: application/json" -d '{
@@ -139,6 +153,19 @@ return_type {
     "deadline": ["deadline0", ...],
     "members": [["member00", "member01", ...], ["member10", ...], ...],
     "todo_task": ["todo_task0", ...]
+}
+```
+
+### Get assigned users to task
+``` shell
+curl -X POST http://localhost:5001/ -H "Content-Type: application/json" -d '{
+    "type": "get_assigned_users_to_task",
+    "task_id": "id",
+    "jwt": "key"
+}'
+
+return_type {
+    "users": ["username0", ...]
 }
 ```
 
