@@ -62,6 +62,32 @@ return_type {
 }
 ```
 
+### Is Group Admin
+``` shell
+curl -X POST http://localhost:5001/ -H "Content-Type: application/json" -d '{
+    "type": "is_admin",
+    "group_id": "id",
+    "jwt": "key"
+}'
+
+return_type {
+    "is_admin": "True/False"
+}
+```
+
+### Group Users
+``` shell
+curl -X POST http://localhost:5001/ -H "Content-Type: application/json" -d '{
+    "type": "get_group_users",
+    "group_id": "id",
+    "jwt": "key"
+}'
+
+return_type {
+    "users": ["username0", ...]
+}
+```
+
 ### Delete Group
 ``` shell
 curl -X POST http://localhost:5001/ -H "Content-Type: application/json" -d '{
