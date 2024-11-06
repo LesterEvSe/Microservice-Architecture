@@ -22,11 +22,17 @@ services:
       - "5005:5005"
     
   user-db:
-    image: postgres:latest
+    image: postgres:17  # # Pin to specific version to omit pulling each time.
     environment:
       POSTGRES_DB: users
       POSTGRES_USER: user_admin
       POSTGRES_PASSWORD: eighty9@doublet
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user_admin -d users"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+      start_period: 5s
     volumes:
       - user_postgres_data:/var/lib/postgresql/data
     ports:
@@ -35,8 +41,6 @@ services:
   user-service:
     build:
       context: ./user-service
-    depends_on:
-      - user-db
     environment:
       PYTHONUNBUFFERED: 1
       DB_HOST: user-db
@@ -44,15 +48,24 @@ services:
       DB_NAME: users
       DB_USER: user_admin
       DB_PASS: eighty9@doublet
+    depends_on:
+      user-db:
+        condition: service_healthy
     ports:
       - "5001:5001"
   
   task-db:
-    image: postgres:latest
+    image: postgres:17
     environment:
       POSTGRES_DB: tasks
       POSTGRES_USER: task_admin
       POSTGRES_PASSWORD: A7noth56therUser
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U task_admin -d tasks"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+      start_period: 5s
     volumes:
       - task_postgres_data:/var/lib/postgresql/data
     ports:
@@ -61,8 +74,6 @@ services:
   task-service:
     build:
       context: ./task-service
-    depends_on:
-      - task-db
     environment:
       PYTHONUNBUFFERED: 1
       DB_HOST: task-db
@@ -70,6 +81,9 @@ services:
       DB_NAME: tasks
       DB_USER: task_admin
       DB_PASS: A7noth56therUser
+    depends_on:
+      task-db:
+        condition: service_healthy
     ports:
       - "5002:5002"
 

@@ -7,14 +7,11 @@ from Data.UserDTO import *
 TASK_SERVICE=5002
 
 class UserHandler(BaseHTTPRequestHandler):
-    def _task_service_interaction(self, json_data, jwt=None):
+    def _task_service_interaction(self, json_data):
         task_data = self.send_to_service(TASK_SERVICE, json_data)
         if "error" in task_data:
             self._send_error(task_data["error"])
             return
-
-        if jwt is not None:
-            task_data["jwt"] = jwt
         self._send_data_ok(task_data)
 
     def _send_error(self, error_msg):
@@ -25,11 +22,11 @@ class UserHandler(BaseHTTPRequestHandler):
             "message": error_msg
         }).encode())
     
-    def _send_data_ok(self, json_data):
+    def _send_data_ok(self, dict_data):
         self.send_response(200)
         self.send_header('Content-type', 'application/json')
         self.end_headers()
-        self.wfile.write(json.dumps(json_data).encode('utf-8'))
+        self.wfile.write(json.dumps(dict_data).encode('utf-8'))
 
     def do_POST(self):
         # Get data from other services
@@ -46,13 +43,7 @@ class UserHandler(BaseHTTPRequestHandler):
             user_dto = user_dto[1]
 
             jwt_token = logic.register_user(user_dto)
-            if jwt_token[0]:
-                self._task_service_interaction(json.dumps({
-                    "type": "get_groups",
-                    "username": user_dto.username
-                }), jwt_token[1])
-            else:
-                self._send_error(jwt_token[1])
+            self._send_data_ok({"jwt", jwt_token})
             return
 
         elif msg_type == "login":
@@ -66,13 +57,7 @@ class UserHandler(BaseHTTPRequestHandler):
             user_dto = user_dto[1]
 
             jwt_token = logic.login_user(user_dto)
-            if jwt_token:
-                self._task_service_interaction(json.dumps({
-                    "type": "get_groups",
-                    "username": user_dto.username
-                }), jwt_token)
-            else:
-                self._send_error("Incorrect login or password.")
+            self._send_data_ok({"jwt", jwt_token})
             return
 
         check_jwt = logic.get_username_and_check_jwt(data["jwt"])
@@ -81,7 +66,27 @@ class UserHandler(BaseHTTPRequestHandler):
             return
 
         username = check_jwt[1]
-        if msg_type == "add_group":
+        if msg_type == "get_groups":
+            self._task_service_interaction(json.dumps({
+                "type": "get_groups",
+                "username": username
+            }))
+        
+        elif msg_type == "is_admin":
+            self._task_service_interaction(json.dumps({
+                "type": "is_admin",
+                "group_id": data["group_id"],
+                "username": username
+            }))
+        
+        elif msg_type == "get_group_users":
+            self._task_service_interaction(json.dumps({
+                "type": "get_group_users",
+                "group_id": data["group_id"],
+                "username": username
+            }))
+        
+        elif msg_type == "add_group":
             self._task_service_interaction(json.dumps({
                 "type": "add_group",
                 "group": data["group"],
@@ -149,6 +154,13 @@ class UserHandler(BaseHTTPRequestHandler):
                 "type": "add_task",
                 "group_id": data["group_id"],
                 "user": username,
+            }))
+        
+        elif msg_type == "get_assigned_users_to_task":
+            self._task_service_interaction(json.dumps({
+                "type": "get_assigned_users_to_task",
+                "task_id": data["task_id"],
+                "username": username
             }))
 
 

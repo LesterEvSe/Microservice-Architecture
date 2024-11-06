@@ -31,6 +31,12 @@ class TaskHandler(BaseHTTPRequestHandler):
         msg_type = data["type"]
         if msg_type == "get_groups":
             self._send_data(get_groups_for_username(data["username"]))
+        
+        elif msg_type == "is_group_admin":
+            pass
+        
+        elif msg_type == "get_group_users":
+            pass
 
         elif msg_type == "add_group":
             if add_group(json_to_group_dto(data)):
@@ -83,3 +89,6 @@ class TaskHandler(BaseHTTPRequestHandler):
                 self._send_data(tasks)
             else:
                 self._send_error("You can't get tasks for this group")
+        
+        elif msg_type == "get_assigned_users_to_task":
+            pass
