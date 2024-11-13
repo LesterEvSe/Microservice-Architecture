@@ -1,4 +1,5 @@
 class GroupDTO:
-    def __init__(self, group_name: str, member: str):
-        self.group_name = group_name
+    # Group Id or Name
+    def __init__(self, group, member: str):
+        self.group = group
         self.member = member

@@ -78,25 +78,64 @@ class TaskDB:
     def add_group(self, group: Group):
         self.cursor.execute('''
             INSERT INTO groups ("group", member, admin) 
-            VALUES (?, ?, ?)
-        ''', (group.group_name, group.member, group.admin))
+            VALUES (%s, %s, %s)
+        ''', (group.group, group.member, group.admin))
         self.conn.commit()
     
     # Next 3 methods only for group admins
-    def delete_group(self, group_id) -> str:
-        pass
+    def delete_group_by_id(self, group_id) -> tuple[bool, str]:
+        try:
+            self.cursor.execute('DELETE FROM groups WHERE group_id = %s', (group_id,))
+            return (True, None)
+        except psycopg2.Error as e:
+            return (False, f"Error deleting group: {e}")
 
-    def add_member_to_group(self, member, group_id) -> str:
-        pass
+    def add_member_to_group(self, member, group_id) -> tuple[bool, str]:
+        try:
+            self.cursor.execute('SELECT group_id FROM groups WHERE group_id = %s', (group_id,))
+            if self.cursor.fetchone() is None:
+                return (False, "group not found.")
 
-    def delete_member_from_group(self, member, group_id) -> str:
-        pass
+            # Додавання учасника до групи
+            self.cursor.execute('''
+                INSERT INTO group_data (group_id, task_id, member)
+                VALUES (%s, NULL, %s)
+                ON CONFLICT (group_id, member) DO NOTHING
+            ''', (group_id, member))
+            return (True, None)
+        except psycopg2.Error as e:
+            return (False, f"Error adding member: {e}")
+
+    def delete_member_from_group(self, member, group_id) -> tuple[bool, str]:
+        try:
+            self.cursor.execute('''
+                DELETE FROM group_data 
+                WHERE group_id = %s AND member = %s
+            ''', (group_id, member))
+            return (True, None)
+        except psycopg2.Error as e:
+            return (False, f"Error deleting member: {e}")
 
     def is_user_admin_of_group(self, username, group_id) -> bool:
-        pass
+        try:
+            self.cursor.execute('''
+                SELECT admin FROM groups 
+                WHERE group_id = %s AND member = %s
+            ''', (group_id, username))
+            result = self.cursor.fetchone()
+            return result is not None and result[0] == True
+        except psycopg2.Error:
+            return False
 
     def is_user_in_group(self, username, group_id) -> bool:
-        pass
+        try:
+            self.cursor.execute('''
+                SELECT 1 FROM group_data 
+                WHERE group_id = %s AND member = %s
+            ''', (group_id, username))
+            return self.cursor.fetchone() is not None
+        except psycopg2.Error:
+            return False
 
     # TODO need to recode
     def add_task(self, group_id, task, deadline, description, todo_task, member: list) -> bool:

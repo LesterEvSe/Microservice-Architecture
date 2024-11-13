@@ -11,18 +11,36 @@ DB = TaskDB(dbname="tasks", user="task_admin", password="A7noth56therUser", host
 def get_groups_for_username(username):
     return DB.get_groups_for_username(username)
 
+def is_user_admin_of_group(group_dto: GroupDTO):
+    return DB.is_user_admin_of_group(group_dto.member, group_dto.group)
+
+def get_group_users(group_dto: GroupDTO):
+    admin = is_user_admin_of_group(group_dto.member, group_dto.group)
+    group = group_dto_to_group_entity(group_dto, admin)
+    return DB.get_group_users(group)
+
 def add_group(group_dto: GroupDTO):
     group = group_dto_to_group_entity(group_dto, admin=True)
     DB.add_group(group)
 
-def delete_group(username, group: GroupDTO):
-    pass
+# Check if user is admin
+def delete_group(group_dto: GroupDTO):
+    if is_user_admin_of_group(group_dto.member, group_dto.group):
+        DB.delete_group_by_id(group_dto.group)
+        return True
+    return False
 
-def add_member_to_group(member, group: GroupDTO):
-    pass
+def add_member_to_group(member, group_dto: GroupDTO):
+    if is_user_admin_of_group(group_dto.member, group_dto.group):
+        DB.add_member_to_group(member, group_dto.group)
+        return True
+    return False
 
-def delete_member_from_group(member, group: GroupDTO):
-    pass
+def delete_member_from_group(member, group_dto: GroupDTO):
+    if is_user_admin_of_group(group_dto.member, group_dto.group):
+        DB.delete_member_from_group(member, group_dto.group)
+        return True
+    return False
 
 def get_tasks_for_group(username, group: GroupDTO):
     pass

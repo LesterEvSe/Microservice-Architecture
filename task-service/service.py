@@ -28,47 +28,75 @@ class TaskHandler(BaseHTTPRequestHandler):
         post_data = self.rfile.read(int(self.headers['Content-Length']))
         data = json.loads(post_data.decode('utf-8'))
 
+        ''' # template
+        res = json_to_group_dto(data)
+            if res[0]:
+                self._send_data(_method_(res[1]))
+            else:
+                self._send_error(res[1])
+        '''
+
         msg_type = data["type"]
         if msg_type == "get_groups":
             self._send_data(get_groups_for_username(data["username"]))
         
         elif msg_type == "is_group_admin":
-            pass
-        
+            res = json_to_group_dto(data)
+            if res[0]:
+                self._send_data(is_user_admin_of_group(res[1]))
+            else:
+                self._send_error(res[1])
+    
         elif msg_type == "get_group_users":
-            pass
+            res = json_to_group_dto(data)
+            if res[0]:
+                self._send_data(get_group_users(res[1]))
+            else:
+                self._send_error(res[1])
 
         elif msg_type == "add_group":
-            if add_group(json_to_group_dto(data)):
-                self._send_data({})
+            res = json_to_group_dto(data)
+            if res[0]:
+                self._send_data(add_group(res[1]))
             else:
-                self._send_error("Something went wrong.")
+                self._send_error(res[1])
         
         elif msg_type == "delete_group":
-            if DB.is_user_admin_of_group(data["admin"], data["group_id"]) and DB.delete_group(data["group_id"]):
-                self._send_data({})
+            res = json_to_group_dto(data)
+            if res[0]:
+                self._send_data(delete_group(res[1]))
             else:
-                self._send_error("This user is not a group administrator.")
+                self._send_error(res[1])
         
         elif msg_type == "add_member_to_group":
-            if DB.is_user_admin_of_group(data["admin"], data["group_id"]) and DB.add_member_to_group(data["member"], data["group_id"]):
-                self._send_data({})
+            res = json_to_group_dto(data)
+            if res[0]:
+                self._send_data(add_member_to_group(data["member"], res[1]))
             else:
-                self._send_error("This user is not a group administrator.")
+                self._send_error(res[1])
         
         elif msg_type == "delete_member_from_group":
-            if DB.is_user_admin_of_group(data["admin"], data["group_id"]) and DB.delete_member_from_group(data["member"], data["group_id"]):
-                self._send_data({})
+            res = json_to_group_dto(data)
+            if res[0]:
+                self._send_data(delete_member_from_group(data["member"], res[1]))
             else:
-                self._send_error("This user is not a group administrator.")
+                self._send_error(res[1])
         
         elif msg_type == "add_task":
+            res = json_to_group_dto(data)
+            if res[0]:
+                self._send_data(add_member_to_group(data["member"], res[1]))
+            else:
+                self._send_error(res[1])
+            
+            '''
             if DB.is_user_in_group(data["user"], data["group_id"]) and (task_id := DB.add_task(
                 data["group_id"], data["task"], data["deadline"], data["description"], data["todo_task"], data["member"]
             )):
                 self._send_data(task_id)
             else:
                 self._send_error("This user is not in the group.")
+            '''
         
         elif msg_type == "delete_task":
             if DB.is_user_in_group(data["user"], data["group_id"]) and DB.delete_task(data["task_id"]):
