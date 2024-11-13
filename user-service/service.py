@@ -42,8 +42,12 @@ class UserHandler(BaseHTTPRequestHandler):
                 return
             user_dto = user_dto[1]
 
-            jwt_token = logic.register_user(user_dto)
-            self._send_data_ok({"jwt", jwt_token})
+            (res, jwt_token) = logic.register_user(user_dto)
+            if not res:
+                self._send_error(jwt_token)
+                return
+            
+            self._send_data_ok({"jwt": jwt_token})
             return
 
         elif msg_type == "login":
@@ -57,7 +61,7 @@ class UserHandler(BaseHTTPRequestHandler):
             user_dto = user_dto[1]
 
             jwt_token = logic.login_user(user_dto)
-            self._send_data_ok({"jwt", jwt_token})
+            self._send_data_ok({"jwt": jwt_token})
             return
 
         check_jwt = logic.get_username_and_check_jwt(data["jwt"])
@@ -83,7 +87,7 @@ class UserHandler(BaseHTTPRequestHandler):
             self._task_service_interaction(json.dumps({
                 "type": "get_group_users",
                 "group_id": data["group_id"],
-                "username": username
+                "member": username
             }))
         
         elif msg_type == "add_group":
@@ -172,6 +176,7 @@ class UserHandler(BaseHTTPRequestHandler):
             if response.status_code == 200:
                 return response.json()
             else:
-                return {"error": f"Failed to communicate with service at port {to_port}, status code: {response.status_code}"}
+                error_message = response.text if response.text else "unexpected error from service"
+            return {"error": f"Failed to communicate with service at port {to_port}, status code: {response.status_code}, message: {error_message}"}
         except Exception as e:
             return {"error": str(e)}

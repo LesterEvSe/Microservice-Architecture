@@ -32,15 +32,16 @@ class UserDB:
 
     def get_jwt_for_username(self, username):
         self.cursor.execute('SELECT jwt FROM registration WHERE username = %s', (username,))
-        return self.cursor.fetchone()
+        result = self.cursor.fetchone()
+        return result[0] if result else None
     
     def is_username_exist(self, username) -> bool:
-        self.cursor.execute('SELECT * FROM registration WHERE username = %s', (username,))
-        return self.cursor.fetchone()
+        self.cursor.execute('SELECT 1 FROM registration WHERE username = %s', (username,))
+        return self.cursor.fetchone() is not None
 
     def is_user_email_exist(self, user_email) -> bool:
-        self.cursor.execute('SELECT * FROM registration WHERE email = %s', (user_email,))
-        return self.cursor.fetchone()
+        self.cursor.execute('SELECT 1 FROM registration WHERE email = %s', (user_email,))
+        return self.cursor.fetchone() is not None
     
     def is_password_correct(self, user: User) -> bool:
         self.cursor.execute('SELECT password FROM registration WHERE username = %s', (user.username,))

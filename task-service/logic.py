@@ -15,32 +15,41 @@ def is_user_admin_of_group(group_dto: GroupDTO):
     return DB.is_user_admin_of_group(group_dto.member, group_dto.group)
 
 def get_group_users(group_dto: GroupDTO):
-    admin = is_user_admin_of_group(group_dto.member, group_dto.group)
+    admin = is_user_admin_of_group(group_dto)
     group = group_dto_to_group_entity(group_dto, admin)
     return DB.get_group_users(group)
 
 def add_group(group_dto: GroupDTO):
     group = group_dto_to_group_entity(group_dto, admin=True)
-    DB.add_group(group)
+    return DB.add_group(group)
 
 # Check if user is admin
-def delete_group(group_dto: GroupDTO):
-    if is_user_admin_of_group(group_dto.member, group_dto.group):
-        DB.delete_group_by_id(group_dto.group)
-        return True
-    return False
+def delete_group(group_dto: GroupDTO) -> tuple[bool, str]:
+    if not is_user_admin_of_group(group_dto):
+        return (False, "user is not admin of the group.")
+    
+    (res, err) = DB.delete_group_by_id(group_dto.group)
+    if not res:
+        return (res, err)
+    return (True, None)
 
 def add_member_to_group(member, group_dto: GroupDTO):
-    if is_user_admin_of_group(group_dto.member, group_dto.group):
-        DB.add_member_to_group(member, group_dto.group)
-        return True
-    return False
+    if not is_user_admin_of_group(group_dto):
+        return (False, "user is not admin of the group.")
+    
+    (res, err) = DB.add_member_to_group(member, group_dto.group)
+    if not res:
+        return (res, err)
+    return (True, None)
 
 def delete_member_from_group(member, group_dto: GroupDTO):
-    if is_user_admin_of_group(group_dto.member, group_dto.group):
-        DB.delete_member_from_group(member, group_dto.group)
-        return True
-    return False
+    if not is_user_admin_of_group(group_dto):
+        return (False, "user is not admin of the group.")
+    
+    (res, err) = DB.delete_member_from_group(member, group_dto.group)
+    if not res:
+        return (res, err)
+    return (True, None)
 
 def get_tasks_for_group(username, group: GroupDTO):
     pass

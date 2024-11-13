@@ -7,12 +7,9 @@ from Data.GroupDTO import *
 
 class TaskHandler(BaseHTTPRequestHandler):
     def _send_error(self, error_msg):
-        print("here", flush=True)
         self.send_response(500)
         self.end_headers()
-        self.wfile.write(json.dumps({
-            "error": error_msg
-        }).encode('utf-8'))
+        self.wfile.write(error_msg.encode('utf-8'))
     
     def _send_data(self, dict_data):
         self.send_response(200)
@@ -20,33 +17,23 @@ class TaskHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(json.dumps(dict_data).encode('utf-8'))
     
-    # Can pass function as arg instead of _send_data and _send_error control flow.
-    def _logic_communication(self):
-        pass
-    
     def do_POST(self):
         post_data = self.rfile.read(int(self.headers['Content-Length']))
         data = json.loads(post_data.decode('utf-8'))
-
-        ''' # template
-        res = json_to_group_dto(data)
-            if res[0]:
-                self._send_data(_method_(res[1]))
-            else:
-                self._send_error(res[1])
-        '''
 
         msg_type = data["type"]
         if msg_type == "get_groups":
             self._send_data(get_groups_for_username(data["username"]))
         
-        elif msg_type == "is_group_admin":
+        elif msg_type == "is_admin":
             res = json_to_group_dto(data)
+            print(res[1])
             if res[0]:
-                self._send_data(is_user_admin_of_group(res[1]))
+                self._send_data({"is_admin": is_user_admin_of_group(res[1])})
             else:
                 self._send_error(res[1])
-    
+        
+        # TODO not implemented now
         elif msg_type == "get_group_users":
             res = json_to_group_dto(data)
             if res[0]:
@@ -57,30 +44,44 @@ class TaskHandler(BaseHTTPRequestHandler):
         elif msg_type == "add_group":
             res = json_to_group_dto(data)
             if res[0]:
-                self._send_data(add_group(res[1]))
+                self._send_data({"group_id": add_group(res[1])})
             else:
                 self._send_error(res[1])
         
         elif msg_type == "delete_group":
             res = json_to_group_dto(data)
-            if res[0]:
-                self._send_data(delete_group(res[1]))
-            else:
+            if not res[0]:
                 self._send_error(res[1])
+                return
+            
+            if not delete_group(res[1]):
+                self._send_error("failed to delete group.")
+                return
+            self._send_data({})
         
+        # TODO need to test
         elif msg_type == "add_member_to_group":
             res = json_to_group_dto(data)
-            if res[0]:
-                self._send_data(add_member_to_group(data["member"], res[1]))
-            else:
+            if not res[0]:
                 self._send_error(res[1])
+                return
+            
+            if not add_member_to_group(data["member"], res[1]):
+                self._send_error("failed to delete group.")
+                return
+            self._send_data({})
         
+        # TODO need to test
         elif msg_type == "delete_member_from_group":
             res = json_to_group_dto(data)
-            if res[0]:
-                self._send_data(delete_member_from_group(data["member"], res[1]))
-            else:
+            if not res[0]:
                 self._send_error(res[1])
+                return
+            
+            if not delete_member_from_group(data["member"], res[1]):
+                self._send_error("failed to delete group.")
+                return
+            self._send_data({})
         
         elif msg_type == "add_task":
             res = json_to_group_dto(data)

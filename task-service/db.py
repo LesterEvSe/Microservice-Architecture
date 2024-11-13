@@ -62,6 +62,7 @@ class TaskDB:
         print(f"Connection to the task-service database closed.")
 
     def get_groups_for_username(self, username):
+        print(username)
         self.cursor.execute('''
             SELECT DISTINCT group_id, group_name
             FROM groups
@@ -76,16 +77,20 @@ class TaskDB:
         return result
 
     def add_group(self, group: Group):
+        print(group.member)
         self.cursor.execute('''
-            INSERT INTO groups ("group", member, admin) 
+            INSERT INTO groups (group_name, member, admin) 
             VALUES (%s, %s, %s)
+            RETURNING group_id
         ''', (group.group, group.member, group.admin))
         self.conn.commit()
+        return self.cursor.fetchone()[0]
     
     # Next 3 methods only for group admins
     def delete_group_by_id(self, group_id) -> tuple[bool, str]:
         try:
             self.cursor.execute('DELETE FROM groups WHERE group_id = %s', (group_id,))
+            self.conn.commit()
             return (True, None)
         except psycopg2.Error as e:
             return (False, f"Error deleting group: {e}")
@@ -102,6 +107,7 @@ class TaskDB:
                 VALUES (%s, NULL, %s)
                 ON CONFLICT (group_id, member) DO NOTHING
             ''', (group_id, member))
+            self.conn.commit()
             return (True, None)
         except psycopg2.Error as e:
             return (False, f"Error adding member: {e}")
@@ -112,6 +118,7 @@ class TaskDB:
                 DELETE FROM group_data 
                 WHERE group_id = %s AND member = %s
             ''', (group_id, member))
+            self.conn.commit()
             return (True, None)
         except psycopg2.Error as e:
             return (False, f"Error deleting member: {e}")
