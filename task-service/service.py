@@ -27,7 +27,6 @@ class TaskHandler(BaseHTTPRequestHandler):
         
         elif msg_type == "is_admin":
             res = json_to_group_dto(data)
-            print(res[1])
             if res[0]:
                 self._send_data({"is_admin": is_user_admin_of_group(res[1])})
             else:
@@ -36,17 +35,27 @@ class TaskHandler(BaseHTTPRequestHandler):
         # TODO not implemented now
         elif msg_type == "get_group_users":
             res = json_to_group_dto(data)
-            if res[0]:
-                self._send_data(get_group_users(res[1]))
-            else:
+            if not res[0]:
                 self._send_error(res[1])
+                return
+
+            (res, users) = get_group_users(res[1])
+            if not res:
+                self._send_error(users)
+            else:
+                self._send_data({"users": users})
 
         elif msg_type == "add_group":
             res = json_to_group_dto(data)
-            if res[0]:
-                self._send_data({"group_id": add_group(res[1])})
-            else:
+            if not res[0]:
                 self._send_error(res[1])
+                return
+            
+            (res, id) = add_group(res[1])
+            if not res:
+                self._send_error(id)
+            else:
+                self._send_data({"group_id" : id})
         
         elif msg_type == "delete_group":
             res = json_to_group_dto(data)
@@ -56,8 +65,8 @@ class TaskHandler(BaseHTTPRequestHandler):
             
             if not delete_group(res[1]):
                 self._send_error("failed to delete group.")
-                return
-            self._send_data({})
+            else:
+                self._send_data({})
         
         # TODO need to test
         elif msg_type == "add_member_to_group":
@@ -68,8 +77,8 @@ class TaskHandler(BaseHTTPRequestHandler):
             
             if not add_member_to_group(data["member"], res[1]):
                 self._send_error("failed to delete group.")
-                return
-            self._send_data({})
+            else:
+                self._send_data({})
         
         # TODO need to test
         elif msg_type == "delete_member_from_group":
@@ -80,8 +89,8 @@ class TaskHandler(BaseHTTPRequestHandler):
             
             if not delete_member_from_group(data["member"], res[1]):
                 self._send_error("failed to delete group.")
-                return
-            self._send_data({})
+            else:
+                self._send_data({})
         
         elif msg_type == "add_task":
             res = json_to_group_dto(data)

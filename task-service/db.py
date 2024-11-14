@@ -15,13 +15,22 @@ class TaskDB:
             )
         ''')
 
-        # groups. Must be initialized before group_data table
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS groups (
                 group_id SERIAL PRIMARY KEY,
-                group_name VARCHAR(100) NOT NULL CHECK (LENGTH(group_name) >= 1 AND LENGTH(group_name) <= 100),
+                group_name VARCHAR(100) NOT NULL CHECK (LENGTH(group_name) >= 1 AND LENGTH(group_name) <= 100)
+            )
+        ''')
+
+        # Таблиця group_members для зберігання інформації про учасників груп
+        self.cursor.execute('''
+            CREATE TABLE IF NOT EXISTS group_members (
+                group_id INTEGER NOT NULL,
                 member VARCHAR(50) NOT NULL CHECK (LENGTH(member) >= 4 AND LENGTH(member) <= 50),
-                admin BOOLEAN NOT NULL
+                admin BOOLEAN NOT NULL,
+                
+                PRIMARY KEY (group_id, member),
+                FOREIGN KEY (group_id) REFERENCES groups(group_id) ON DELETE CASCADE
             )
         ''')
 
@@ -62,11 +71,11 @@ class TaskDB:
         print(f"Connection to the task-service database closed.")
 
     def get_groups_for_username(self, username):
-        print(username)
         self.cursor.execute('''
-            SELECT DISTINCT group_id, group_name
-            FROM groups
-            WHERE member = %s
+            SELECT g.group_id, g.group_name
+            FROM groups g
+            JOIN group_members gm ON g.group_id = gm.group_id
+            WHERE gm.member = %s
         ''', (username,))
         rows = self.cursor.fetchall()
         
@@ -75,39 +84,55 @@ class TaskDB:
             result["group_id"].append(row[0])
             result["group"].append(row[1])
         return result
-
-    def add_group(self, group: Group):
-        print(group.member)
+    
+    def get_group_users(self, group_id):
         self.cursor.execute('''
-            INSERT INTO groups (group_name, member, admin) 
-            VALUES (%s, %s, %s)
+            SELECT member
+            FROM group_members
+            WHERE group_id = %s
+        ''', (group_id,))
+        rows = self.cursor.fetchall()
+        return [row[0] for row in rows]
+
+    def get_group_name_by_id(self, group_id) -> tuple[bool, str]:
+        try:
+            self.cursor.execute('''
+                SELECT DISTINCT group_name
+                FROM groups
+                WHERE group_id = %s
+            ''', (group_id,))
+        
+            result = self.cursor.fetchone()
+            if result is None:
+                return (False, "group not found.")
+            return (True, result[0])
+        except psycopg2.Error as e:
+            return (False, f"error retrieving group name: {e}")
+
+
+    def add_group(self, group_name):
+        self.cursor.execute('''
+            INSERT INTO groups (group_name) 
+            VALUES (%s)
             RETURNING group_id
-        ''', (group.group, group.member, group.admin))
-        self.conn.commit()
-        return self.cursor.fetchone()[0]
+        ''', (group_name,))
+        group_id = self.cursor.fetchone()[0]
+        return group_id
     
     # Next 3 methods only for group admins
     def delete_group_by_id(self, group_id) -> tuple[bool, str]:
         try:
             self.cursor.execute('DELETE FROM groups WHERE group_id = %s', (group_id,))
-            self.conn.commit()
             return (True, None)
         except psycopg2.Error as e:
             return (False, f"Error deleting group: {e}")
 
-    def add_member_to_group(self, member, group_id) -> tuple[bool, str]:
+    def add_member_to_group(self, group: Group) -> tuple[bool, str]:
         try:
-            self.cursor.execute('SELECT group_id FROM groups WHERE group_id = %s', (group_id,))
-            if self.cursor.fetchone() is None:
-                return (False, "group not found.")
-
-            # Додавання учасника до групи
             self.cursor.execute('''
-                INSERT INTO group_data (group_id, task_id, member)
-                VALUES (%s, NULL, %s)
-                ON CONFLICT (group_id, member) DO NOTHING
-            ''', (group_id, member))
-            self.conn.commit()
+                INSERT INTO group_members (group_id, member, admin)
+                VALUES (%s, %s, %s)
+            ''', (group.group, group.member, group.admin))
             return (True, None)
         except psycopg2.Error as e:
             return (False, f"Error adding member: {e}")
@@ -115,10 +140,9 @@ class TaskDB:
     def delete_member_from_group(self, member, group_id) -> tuple[bool, str]:
         try:
             self.cursor.execute('''
-                DELETE FROM group_data 
+                DELETE FROM group_members 
                 WHERE group_id = %s AND member = %s
             ''', (group_id, member))
-            self.conn.commit()
             return (True, None)
         except psycopg2.Error as e:
             return (False, f"Error deleting member: {e}")
@@ -126,7 +150,7 @@ class TaskDB:
     def is_user_admin_of_group(self, username, group_id) -> bool:
         try:
             self.cursor.execute('''
-                SELECT admin FROM groups 
+                SELECT admin FROM group_members 
                 WHERE group_id = %s AND member = %s
             ''', (group_id, username))
             result = self.cursor.fetchone()
@@ -137,7 +161,7 @@ class TaskDB:
     def is_user_in_group(self, username, group_id) -> bool:
         try:
             self.cursor.execute('''
-                SELECT 1 FROM group_data 
+                SELECT 1 FROM group_members 
                 WHERE group_id = %s AND member = %s
             ''', (group_id, username))
             return self.cursor.fetchone() is not None
@@ -180,6 +204,19 @@ class TaskDB:
 
     def get_tasks_for_group(self, group_id):
         pass
+
+    def transaction(self, func, *args, **kwargs):
+        try:
+            self.conn.autocommit = False
+            result = func(*args, **kwargs)
+            self.conn.commit()
+            return result
+
+        except Exception as e:
+            self.conn.rollback()
+            return (False, f"an error occurred during the transaction: {e}")
+        finally:
+            self.conn.autocommit = True
     
     
 

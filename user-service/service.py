@@ -114,7 +114,7 @@ class UserHandler(BaseHTTPRequestHandler):
         
         elif msg_type == "delete_member_from_group":
             self._task_service_interaction(json.dumps({
-                "type": "add_member_to_group",
+                "type": "delete_member_from_group",
                 "group_id": data["group_id"],
                 "member": data["member"],
                 "admin": username

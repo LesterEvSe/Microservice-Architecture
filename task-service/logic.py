@@ -15,20 +15,26 @@ def is_user_admin_of_group(group_dto: GroupDTO):
     return DB.is_user_admin_of_group(group_dto.member, group_dto.group)
 
 def get_group_users(group_dto: GroupDTO):
-    admin = is_user_admin_of_group(group_dto)
-    group = group_dto_to_group_entity(group_dto, admin)
-    return DB.get_group_users(group)
+    if not DB.is_user_in_group(group_dto.member, group_dto.group):
+        return (False, "the user is not in this group")
+    return (True, DB.get_group_users(group_dto.group))
 
 def add_group(group_dto: GroupDTO):
     group = group_dto_to_group_entity(group_dto, admin=True)
-    return DB.add_group(group)
+    group_id = DB.add_group(group.group)
+
+    group.group = group_id
+    (res, error) = DB.transaction(DB.add_member_to_group, group)
+    if not res:
+        return (res, error)
+    return (True, group_id)
 
 # Check if user is admin
 def delete_group(group_dto: GroupDTO) -> tuple[bool, str]:
     if not is_user_admin_of_group(group_dto):
         return (False, "user is not admin of the group.")
     
-    (res, err) = DB.delete_group_by_id(group_dto.group)
+    (res, err) = DB.transaction(DB.delete_group_by_id, group_dto.group)
     if not res:
         return (res, err)
     return (True, None)
@@ -37,7 +43,8 @@ def add_member_to_group(member, group_dto: GroupDTO):
     if not is_user_admin_of_group(group_dto):
         return (False, "user is not admin of the group.")
     
-    (res, err) = DB.add_member_to_group(member, group_dto.group)
+    group = group_dto_to_group_entity(GroupDTO(group_dto.group, member), admin=False)
+    (res, err) = DB.transaction(DB.add_member_to_group, group)
     if not res:
         return (res, err)
     return (True, None)
@@ -46,7 +53,7 @@ def delete_member_from_group(member, group_dto: GroupDTO):
     if not is_user_admin_of_group(group_dto):
         return (False, "user is not admin of the group.")
     
-    (res, err) = DB.delete_member_from_group(member, group_dto.group)
+    (res, err) = DB.transaction(DB.delete_member_from_group, member, group_dto.group)
     if not res:
         return (res, err)
     return (True, None)
