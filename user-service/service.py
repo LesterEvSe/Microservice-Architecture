@@ -124,11 +124,11 @@ class UserHandler(BaseHTTPRequestHandler):
             self._task_service_interaction(json.dumps({
                 "type": "add_task",
                 "group_id": data["group_id"],
-                "task": data["task"],
+                "task_name": data["task_name"],
                 "description": data["description"],
                 "deadline": data["deadline"],
                 "todo_task": data["todo_task"],
-                "member": data["member"],  # Can be array of users
+                "members": data["members"],  # Can be array of users
                 "user": username,  # The one who adds the task
             }))
         
@@ -145,26 +145,27 @@ class UserHandler(BaseHTTPRequestHandler):
                 "type": "update_task",
                 "group_id": data["group_id"],
                 "task_id": data["task_id"],
-                "task": data["task"],
+                "task_name": data["task_name"],
                 "description": data["description"],
                 "deadline": data["deadline"],
                 "todo_task": data["todo_task"],
-                "member": data["member"],
+                "members": data["members"],
                 "user": username,
             }))
         
         elif msg_type == "get_tasks_for_group":
             self._task_service_interaction(json.dumps({
-                "type": "add_task",
+                "type": "get_tasks_for_group",
                 "group_id": data["group_id"],
-                "user": username,
+                "member": username,
             }))
         
         elif msg_type == "get_assigned_users_to_task":
             self._task_service_interaction(json.dumps({
                 "type": "get_assigned_users_to_task",
+                "group_id": data["group_id"],
                 "task_id": data["task_id"],
-                "username": username
+                "user": username
             }))
 
 

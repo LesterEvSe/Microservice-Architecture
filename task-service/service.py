@@ -1,7 +1,8 @@
 from http.server import BaseHTTPRequestHandler
 import json
 
-from logic import *
+import logic
+from Mappings.mapper import *
 from Data.GroupDTO import *
 
 
@@ -23,23 +24,22 @@ class TaskHandler(BaseHTTPRequestHandler):
 
         msg_type = data["type"]
         if msg_type == "get_groups":
-            self._send_data(get_groups_for_username(data["username"]))
+            self._send_data(logic.get_groups_for_username(data["username"]))
         
         elif msg_type == "is_admin":
-            res = json_to_group_dto(data)
+            res = logic.json_to_group_dto(data)
             if res[0]:
-                self._send_data({"is_admin": is_user_admin_of_group(res[1])})
+                self._send_data({"is_admin": logic.is_user_admin_of_group(res[1])})
             else:
                 self._send_error(res[1])
         
-        # TODO not implemented now
         elif msg_type == "get_group_users":
             res = json_to_group_dto(data)
             if not res[0]:
                 self._send_error(res[1])
                 return
 
-            (res, users) = get_group_users(res[1])
+            (res, users) = logic.get_group_users(res[1])
             if not res:
                 self._send_error(users)
             else:
@@ -51,7 +51,7 @@ class TaskHandler(BaseHTTPRequestHandler):
                 self._send_error(res[1])
                 return
             
-            (res, id) = add_group(res[1])
+            (res, id) = logic.add_group(res[1])
             if not res:
                 self._send_error(id)
             else:
@@ -63,70 +63,97 @@ class TaskHandler(BaseHTTPRequestHandler):
                 self._send_error(res[1])
                 return
             
-            if not delete_group(res[1]):
+            if not logic.delete_group(res[1]):
                 self._send_error("failed to delete group.")
             else:
                 self._send_data({})
         
-        # TODO need to test
         elif msg_type == "add_member_to_group":
             res = json_to_group_dto(data)
             if not res[0]:
                 self._send_error(res[1])
                 return
             
-            if not add_member_to_group(data["member"], res[1]):
-                self._send_error("failed to delete group.")
+            if not logic.add_member_to_group(data["member"], res[1]):
+                self._send_error("failed to add member to group.")
             else:
                 self._send_data({})
         
-        # TODO need to test
         elif msg_type == "delete_member_from_group":
             res = json_to_group_dto(data)
             if not res[0]:
                 self._send_error(res[1])
                 return
             
-            if not delete_member_from_group(data["member"], res[1]):
-                self._send_error("failed to delete group.")
+            if not logic.delete_member_from_group(data["member"], res[1]):
+                self._send_error("failed to delete member from group.")
             else:
                 self._send_data({})
         
+        # Task
         elif msg_type == "add_task":
-            res = json_to_group_dto(data)
-            if res[0]:
-                self._send_data(add_member_to_group(data["member"], res[1]))
-            else:
+            res = json_to_task_dto(data)
+            if not res:
                 self._send_error(res[1])
-            
-            '''
-            if DB.is_user_in_group(data["user"], data["group_id"]) and (task_id := DB.add_task(
-                data["group_id"], data["task"], data["deadline"], data["description"], data["todo_task"], data["member"]
-            )):
-                self._send_data(task_id)
+                return
+
+            (res, id) = logic.add_task(data["user"], data["group_id"], res[1])
+            if not res:
+                self._send_error(id)
             else:
-                self._send_error("This user is not in the group.")
-            '''
+                self._send_data({"task_id": id})
         
         elif msg_type == "delete_task":
-            if DB.is_user_in_group(data["user"], data["group_id"]) and DB.delete_task(data["task_id"]):
-                self._send_data({})
+            res = json_to_group_data_dto(data)
+            if not res[0]:
+                self._send_error(res[1])
+                return
+            
+            err = logic.delete_task(res[1])
+            if err:
+                self._send_error(err)
             else:
-                self._send_error("You can't delete this task.")
+                self._send_data({})
         
         elif msg_type == "update_task":
-            if DB.is_user_in_group(data["user"], data["group_id"]) and DB.update_task(
-                data["task_id"], data["task"], data["description"], data["deadline"], data["todo_task"], data["member"]
-            ):
-                self._send_data({})
+            task_dto = json_to_task_dto(data)
+            if not task_dto[0]:
+                self._send_error(task_dto[1])
+                return
+            
+            group_data_dto = json_to_group_data_dto(data)
+            if not group_data_dto[0]:
+                self._send_error(group_data_dto[1])
+                return
+            
+            err = logic.update_task(group_data_dto[1], task_dto[1])
+            if err:
+                self._send_error(err)
             else:
-                self._send_error("You can't update this task.")
+                self._send_data({})
+        
         
         elif msg_type == "get_tasks_for_group":
-            if DB.is_user_in_group(data["user"], data["group_id"]) and (tasks := DB.get_tasks_for_group(data["group_id"])):
-                self._send_data(tasks)
+            res = json_to_group_dto(data)
+            if not res[0]:
+                self._send_error(res[1])
+                return
+            
+            (res, tasks) = logic.get_tasks_for_group(res[1])
+            print(tasks)
+            if not res:
+                self._send_error(tasks)
             else:
-                self._send_error("You can't get tasks for this group")
+                self._send_data(tasks)
         
         elif msg_type == "get_assigned_users_to_task":
-            pass
+            res = json_to_group_data_dto(data)
+            if not res[0]:
+                self._send_error(res[1])
+                return
+            
+            (res, users) = logic.get_assigned_users_to_task(res[1])
+            if not res:
+                self._send_error(users)
+            else:
+                self._send_data(users)

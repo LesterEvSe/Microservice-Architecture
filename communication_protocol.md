@@ -121,11 +121,12 @@ curl -X POST http://localhost:5001/ -H "Content-Type: application/json" -d '{
 ``` shell
 curl -X POST http://localhost:5001/ -H "Content-Type: application/json" -d '{
     "type": "add_task",
-    "task" "task text with len [1; 100]",
+    "group_id": "id",
+    "task_name": "task text with len [1; 100]",
     "description": "text",
     "deadline": "some datetime",
     "todo_task": "True/False",
-    "member": ["first_member", "second", ...],
+    "members": ["first_member", "second", ...],
     "jwt": "key"
 }'
 
@@ -150,11 +151,11 @@ curl -X POST http://localhost:5001/ -H "Content-Type: application/json" -d '{
     "type": "update_task",
     "group_id": "id",
     "task_id": "id",
-    "task" "task text with len [1; 100]",
+    "task_name": "task text with len [1; 100]",
     "description": "text",
     "deadline": "some datetime",
     "todo_task": "True/False",
-    "member": ["first_member", "second", ...],
+    "members": ["first_member", "second", ...],
     "jwt": "key"
 }'
 ```
@@ -181,6 +182,7 @@ return_type {
 ``` shell
 curl -X POST http://localhost:5001/ -H "Content-Type: application/json" -d '{
     "type": "get_assigned_users_to_task",
+    "group_id": "id",
     "task_id": "id",
     "jwt": "key"
 }'

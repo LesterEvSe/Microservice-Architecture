@@ -1,5 +1,7 @@
 import psycopg2
 from Entity.Group import *
+from Entity.Task import *
+from Entity.GroupData import *
 
 class TaskDB:
     def _create_tables(self):
@@ -10,7 +12,7 @@ class TaskDB:
                 task_id SERIAL PRIMARY KEY,
                 task_name VARCHAR(100) NOT NULL CHECK (LENGTH(task_name) >= 1 AND LENGTH(task_name) <= 100),
                 description TEXT,
-                deadline TIMESTAMPTZ NOT NULL,
+                deadline TIMESTAMPT NOT NULL,
                 todo_task BOOLEAN NOT NULL
             )
         ''')
@@ -22,7 +24,6 @@ class TaskDB:
             )
         ''')
 
-        # Таблиця group_members для зберігання інформації про учасників груп
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS group_members (
                 group_id INTEGER NOT NULL,
@@ -168,42 +169,78 @@ class TaskDB:
         except psycopg2.Error:
             return False
 
-    # TODO need to recode
-    def add_task(self, group_id, task, deadline, description, todo_task, member: list) -> bool:
-        try:
-            # 1. Add task to certain table
-            self.cursor.execute('''
-                INSERT INTO task_data (task, deadline, description, todo_task) 
-                VALUES (?, ?, ?, ?)
-            ''', (task, deadline, description, todo_task))
-            task_id = self.cursor.lastrowid
+    # Task
+    def add_task(self, task: Task):
+        self.cursor.execute('''
+            INSERT INTO task_data (task_name, description, deadline, todo_task)
+            VALUES (%s, %s, %s, %s)
+            RETURNING task_id
+        ''', (task.task, task.description, task.deadline, task.todo_task))
 
-            # 2. Connect task with group
-            self.cursor.execute('''
-                INSERT INTO group_data ("group", task_id, member) 
-                VALUES (?, ?, ?)
-            ''', (group, task_id, member))
-
-            self.conn.commit()
-            return True
-        
-        except Exception as e:
-            print(f"Error in add_task: {e}")
-            self.conn.rollback()
-            return False
-
-    # If the user is responsible for this task, or is an admin of the group.
-    # Perhaps this will be enough, the rest will be deleted thanks to FOREIGN KEY
-    def delete_task(self, task_id) -> bool:
-        pass
-        #self.cursor.execute('DELETE FROM task_data WHERE task = ?', (task,))
-        #self.conn.commit()
+        task_id = self.cursor.fetchone()[0]
+        self.conn.commit()
+        return task_id
     
-    def update_task(self, task_id, task, description, deadline, todo_task, member: list) -> bool:
-        pass
+    def assign_users_to_task(self, group_id, task_id, members: list[str]):
+        for member in members:
+            self.cursor.execute('''
+                INSERT INTO group_data (group_id, task_id, member)
+                VALUES (%s, %s, %s)
+            ''', (group_id, task_id, member))
+        return (True, None)
+
+    def delete_task(self, task_id):
+        self.cursor.execute('''
+            DELETE FROM task_data 
+            WHERE task_id = %s
+        ''', (task_id,))
+        return (True, None)
+    
+    def is_task_exist(self, task_id) -> bool:
+        self.cursor.execute('SELECT COUNT(*) FROM task_data WHERE task_id = %s', (task_id,))
+        return self.cursor.fetchone()[0] > 0 
+    
+    def update_task(self, task_id, task: Task):
+        self.cursor.execute('''
+            UPDATE task_data 
+            SET task_name = %s, 
+                description = %s, 
+                deadline = %s, 
+                todo_task = %s
+            WHERE task_id = %s
+        ''', (task.task, task.description, task.deadline, task.todo_task, task_id))
+        return (True, None)
 
     def get_tasks_for_group(self, group_id):
-        pass
+        self.cursor.execute('''
+            SELECT t.task_id, t.task_name, t.description, t.deadline, t.todo_task,
+                   ARRAY_AGG(gd.member) AS members
+            FROM task_data t
+            JOIN group_data gd ON t.task_id = gd.task_id
+            WHERE gd.group_id = %s
+            GROUP BY t.task_id
+        ''', (group_id,))
+
+        # Need to do with Task, then in logic convert to DTO...
+        # Ugh... I don't have so much time for this .__.
+        tasks = self.cursor.fetchall()
+        result = {
+            "task_id": [task[0] for task in tasks],
+            "task_name": [task[1] for task in tasks],
+            "description": [task[2] for task in tasks],
+            "deadline": [task[3] for task in tasks],
+            "members": [task[5] for task in tasks], # Array of arrays
+            "todo_task": [task[4] for task in tasks]
+        }
+        return result
+
+    def get_assigned_users_to_task(self, task_id):
+        self.cursor.execute('''
+            SELECT member
+            FROM group_data
+            WHERE task_id = %s
+        ''', (task_id,))
+        return [row[0] for row in self.cursor.fetchall()]
 
     def transaction(self, func, *args, **kwargs):
         try:
