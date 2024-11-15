@@ -12,7 +12,7 @@ class TaskDB:
                 task_id SERIAL PRIMARY KEY,
                 task_name VARCHAR(100) NOT NULL CHECK (LENGTH(task_name) >= 1 AND LENGTH(task_name) <= 100),
                 description TEXT,
-                deadline TIMESTAMPT NOT NULL,
+                deadline TIMESTAMP NOT NULL,
                 todo_task BOOLEAN NOT NULL
             )
         ''')
