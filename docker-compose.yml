@@ -1,7 +1,29 @@
 services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"  # for service interactions
+      - "15672:15672"  # for RabbitMQ web-interface
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: password
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 2s
+      timeout: 10s
+      retries: 20
+  
   frontend:
     build:
       context: ./frontend
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USER: admin
+      RABBITMQ_PASSWORD: password
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
     ports:
       - "5000:5000"
   
@@ -10,6 +32,12 @@ services:
       context: ./search
     environment:
       PYTHONUNBUFFERED: 1  # For auto flush
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USER: admin
+      RABBITMQ_PASSWORD: password
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
     ports:
       - "5010:5010"
   
@@ -18,6 +46,12 @@ services:
       context: ./calendar
     environment:
       PYTHONUNBUFFERED: 1
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USER: admin
+      RABBITMQ_PASSWORD: password
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
     ports:
       - "5005:5005"
     
@@ -48,8 +82,14 @@ services:
       DB_NAME: users
       DB_USER: user_admin
       DB_PASS: eighty9@doublet
+
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USER: admin
+      RABBITMQ_PASSWORD: password
     depends_on:
       user-db:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     ports:
       - "5001:5001"
@@ -81,8 +121,14 @@ services:
       DB_NAME: tasks
       DB_USER: task_admin
       DB_PASS: A7noth56therUser
+
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USER: admin
+      RABBITMQ_PASSWORD: password
     depends_on:
       task-db:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     ports:
       - "5002:5002"
