@@ -9,10 +9,11 @@ TASK_SERVICE=5002
 class UserHandler(BaseHTTPRequestHandler):
     def _task_service_interaction(self, json_data):
         task_data = self.send_to_service(TASK_SERVICE, json_data)
+        print(task_data)
         if "error" in task_data:
             self._send_error(task_data["error"])
-            return
-        self._send_data_ok(task_data)
+        else:
+            self._send_data_ok(task_data)
 
     def _send_error(self, error_msg):
         self.send_response(500)

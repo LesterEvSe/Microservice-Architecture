@@ -29,7 +29,7 @@ def add_group(group_dto: GroupDTO):
     group_id = DB.add_group(group.group)
 
     group.group = group_id
-    (res, error) = DB.transaction(DB.add_member_to_group, group)
+    (res, error) = DB.add_member_to_group(group)
     if not res:
         return (res, error)
     return (True, group_id)
