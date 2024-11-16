@@ -44,9 +44,8 @@ class UserHandler(BaseHTTPRequestHandler):
             (res, jwt_token) = logic.register_user(user_dto)
             if not res:
                 self._send_error(jwt_token)
-                return
-            
-            self._send_data_ok({"jwt": jwt_token})
+            else:
+                self._send_data_ok({"jwt": jwt_token})
             return
 
         elif msg_type == "login":
@@ -59,8 +58,11 @@ class UserHandler(BaseHTTPRequestHandler):
                 return
             user_dto = user_dto[1]
 
-            jwt_token = logic.login_user(user_dto)
-            self._send_data_ok({"jwt": jwt_token})
+            (res, jwt_token) = logic.login_user(user_dto)
+            if not res:
+                self._send_error(jwt_token)
+            else:
+                self._send_data_ok({"jwt": jwt_token})
             return
 
         check_jwt = logic.get_username_and_check_jwt(data["jwt"])
