@@ -8,7 +8,6 @@ from Data.GroupDTO import *
 
 class TaskHandler(BaseHTTPRequestHandler):
     def _send_error(self, error_msg):
-        print(error_msg)
         self.send_response(500)
         self.end_headers()
         self.wfile.write(error_msg.encode('utf-8'))
@@ -141,7 +140,6 @@ class TaskHandler(BaseHTTPRequestHandler):
                 return
             
             (res, tasks) = logic.get_tasks_for_group(res[1])
-            print(tasks)
             if not res:
                 self._send_error(tasks)
             else:

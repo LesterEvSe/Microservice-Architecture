@@ -13,7 +13,8 @@ class TaskDB:
                 task_name VARCHAR(100) NOT NULL CHECK (LENGTH(task_name) >= 1 AND LENGTH(task_name) <= 100),
                 description TEXT,
                 deadline TIMESTAMP NOT NULL,
-                todo_task BOOLEAN NOT NULL
+                todo_task BOOLEAN NOT NULL,
+                members TEXT[] DEFAULT '{}'
             )
         ''')
 
@@ -42,12 +43,11 @@ class TaskDB:
             CREATE TABLE IF NOT EXISTS group_data (
                 group_id INTEGER NOT NULL,
                 task_id INTEGER NOT NULL,
-                member VARCHAR(50) NOT NULL CHECK (LENGTH(member) >= 4 AND LENGTH(member) <= 50),
                 
                 FOREIGN KEY (group_id) REFERENCES groups(group_id) ON DELETE CASCADE,
                 FOREIGN KEY (task_id) REFERENCES task_data(task_id) ON DELETE CASCADE,
                 
-                PRIMARY KEY (group_id, task_id, member)
+                PRIMARY KEY (group_id, task_id)
             )
         ''')
 
@@ -172,21 +172,21 @@ class TaskDB:
     # Task
     def add_task(self, task: Task):
         self.cursor.execute('''
-            INSERT INTO task_data (task_name, description, deadline, todo_task)
-            VALUES (%s, %s, %s, %s)
+            INSERT INTO task_data (task_name, description, deadline, todo_task, members)
+            VALUES (%s, %s, %s, %s, %s)
             RETURNING task_id
-        ''', (task.task, task.description, task.deadline, task.todo_task))
+        ''', (task.task, task.description, task.deadline, task.todo_task, task.members))
 
         task_id = self.cursor.fetchone()[0]
         self.conn.commit()
         return task_id
     
-    def assign_users_to_task(self, group_id, task_id, members: list[str]):
-        for member in members:
-            self.cursor.execute('''
-                INSERT INTO group_data (group_id, task_id, member)
-                VALUES (%s, %s, %s)
-            ''', (group_id, task_id, member))
+    # Link task and users
+    def add_task_to_group(self, group_id, task_id):
+        self.cursor.execute('''
+            INSERT INTO group_data (group_id, task_id)
+            VALUES (%s, %s)
+        ''', (group_id, task_id))
         return (True, None)
 
     def delete_task(self, task_id):
@@ -206,41 +206,46 @@ class TaskDB:
             SET task_name = %s, 
                 description = %s, 
                 deadline = %s, 
-                todo_task = %s
+                todo_task = %s,
+                members = %s,
             WHERE task_id = %s
-        ''', (task.task, task.description, task.deadline, task.todo_task, task_id))
+        ''', (task.task, task.description, task.deadline, task.todo_task, task.members, task_id))
         return (True, None)
 
     def get_tasks_for_group(self, group_id):
         self.cursor.execute('''
-            SELECT t.task_id, t.task_name, t.description, t.deadline, t.todo_task,
-                   ARRAY_AGG(gd.member) AS members
+            SELECT 
+                t.task_id, 
+                t.task_name, 
+                t.description, 
+                t.deadline, 
+                t.todo_task, 
+                t.members
             FROM task_data t
             JOIN group_data gd ON t.task_id = gd.task_id
             WHERE gd.group_id = %s
-            GROUP BY t.task_id
+            GROUP BY t.task_id, t.task_name, t.description, t.deadline, t.todo_task, t.members
         ''', (group_id,))
 
-        # Need to do with Task, then in logic convert to DTO...
-        # Ugh... I don't have so much time for this .__.
         tasks = self.cursor.fetchall()
         result = {
             "task_id": [task[0] for task in tasks],
             "task_name": [task[1] for task in tasks],
             "description": [task[2] for task in tasks],
             "deadline": [task[3] for task in tasks],
-            "members": [task[5] for task in tasks], # Array of arrays
-            "todo_task": [task[4] for task in tasks]
+            "todo_task": [task[4] for task in tasks],
+            "members": [task[5] for task in tasks]  # Array of users
         }
         return result
 
+
     def get_assigned_users_to_task(self, task_id):
         self.cursor.execute('''
-            SELECT member
-            FROM group_data
+            SELECT members
+            FROM task_data
             WHERE task_id = %s
         ''', (task_id,))
-        return [row[0] for row in self.cursor.fetchall()]
+        return self.cursor.fetchall()[0]
 
     def transaction(self, func, *args, **kwargs):
         try:
