@@ -29,7 +29,7 @@ def add_group(group_dto: GroupDTO):
     group_id = DB.add_group(group.group)
 
     group.group = group_id
-    (res, error) = DB.transaction(DB.add_member_to_group, group)
+    (res, error) = DB.add_member_to_group(group)
     if not res:
         return (res, error)
     return (True, group_id)
@@ -65,7 +65,7 @@ def add_task(username, group_id, task_dto: TaskDTO):
     task = task_dto_to_task_entity(task_dto)
     task_id = DB.add_task(task)
     
-    (res, err) = DB.transaction(DB.assign_users_to_task, group_id, task_id, task.members)
+    (res, err) = DB.transaction(DB.add_task_to_group, group_id, task_id)
     if not res:
         return (False, err)
     else:
@@ -82,10 +82,6 @@ def update_task(group_data_dto: GroupDataDTO, task_dto: TaskDTO):
     task = task_dto_to_task_entity(task_dto)
 
     (res, err) = DB.transaction(DB.update_task, group_data.task_id, task)
-    if not res:
-        return err
-    
-    (res, err) = DB.transaction(DB.assign_users_to_task, group_data.group_id, task.task, task.members)
     return None if res else err
 
 def delete_task(group_data_dto: GroupDataDTO):
@@ -104,6 +100,7 @@ def get_tasks_for_group(group: GroupDTO):
         return (False, "user is not in the group.")
     
     tasks = DB.get_tasks_for_group(group.group)
+    print(tasks)
     if 'deadline' in tasks:
         tasks['deadline'] = [dt.isoformat() if isinstance(dt, datetime) else dt for dt in tasks['deadline']]
     return (True, tasks)

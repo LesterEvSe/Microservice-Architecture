@@ -9,17 +9,17 @@ TASK_SERVICE=5002
 class UserHandler(BaseHTTPRequestHandler):
     def _task_service_interaction(self, json_data):
         task_data = self.send_to_service(TASK_SERVICE, json_data)
+        print(task_data)
         if "error" in task_data:
             self._send_error(task_data["error"])
-            return
-        self._send_data_ok(task_data)
+        else:
+            self._send_data_ok(task_data)
 
     def _send_error(self, error_msg):
         self.send_response(500)
         self.end_headers()
         self.wfile.write(json.dumps({
-            "type": "error",
-            "message": error_msg
+            "error": error_msg
         }).encode())
     
     def _send_data_ok(self, dict_data):
@@ -45,9 +45,8 @@ class UserHandler(BaseHTTPRequestHandler):
             (res, jwt_token) = logic.register_user(user_dto)
             if not res:
                 self._send_error(jwt_token)
-                return
-            
-            self._send_data_ok({"jwt": jwt_token})
+            else:
+                self._send_data_ok({"jwt": jwt_token})
             return
 
         elif msg_type == "login":
@@ -60,8 +59,11 @@ class UserHandler(BaseHTTPRequestHandler):
                 return
             user_dto = user_dto[1]
 
-            jwt_token = logic.login_user(user_dto)
-            self._send_data_ok({"jwt": jwt_token})
+            (res, jwt_token) = logic.login_user(user_dto)
+            if not res:
+                self._send_error(jwt_token)
+            else:
+                self._send_data_ok({"jwt": jwt_token})
             return
 
         check_jwt = logic.get_username_and_check_jwt(data["jwt"])

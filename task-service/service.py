@@ -63,7 +63,7 @@ class TaskHandler(BaseHTTPRequestHandler):
                 self._send_error(res[1])
                 return
             
-            if not logic.delete_group(res[1]):
+            if logic.delete_group(res[1]):
                 self._send_error("failed to delete group.")
             else:
                 self._send_data({})
@@ -74,7 +74,7 @@ class TaskHandler(BaseHTTPRequestHandler):
                 self._send_error(res[1])
                 return
             
-            if not logic.add_member_to_group(data["member"], res[1]):
+            if logic.add_member_to_group(data["member"], res[1]):
                 self._send_error("failed to add member to group.")
             else:
                 self._send_data({})
@@ -85,7 +85,7 @@ class TaskHandler(BaseHTTPRequestHandler):
                 self._send_error(res[1])
                 return
             
-            if not logic.delete_member_from_group(data["member"], res[1]):
+            if logic.delete_member_from_group(data["member"], res[1]):
                 self._send_error("failed to delete member from group.")
             else:
                 self._send_data({})
@@ -140,7 +140,6 @@ class TaskHandler(BaseHTTPRequestHandler):
                 return
             
             (res, tasks) = logic.get_tasks_for_group(res[1])
-            print(tasks)
             if not res:
                 self._send_error(tasks)
             else:

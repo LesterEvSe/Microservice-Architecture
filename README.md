@@ -6,3 +6,6 @@ To clone repo with all submodules
 
 To update submodules code  
 `git submodule update --remote --merge`
+
+For get k8s files use the command:
+`kompose convert`
