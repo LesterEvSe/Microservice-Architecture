@@ -18,8 +18,7 @@ class UserHandler(BaseHTTPRequestHandler):
         self.send_response(500)
         self.end_headers()
         self.wfile.write(json.dumps({
-            "type": "error",
-            "message": error_msg
+            "error": error_msg
         }).encode())
     
     def _send_data_ok(self, dict_data):
