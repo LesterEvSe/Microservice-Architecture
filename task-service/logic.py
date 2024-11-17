@@ -51,7 +51,7 @@ def add_member_to_group(member, group_dto: GroupDTO):
     return None if res else err
 
 def delete_member_from_group(member, group_dto: GroupDTO) -> str:
-    if not is_user_admin_of_group(group_dto):
+    if not is_user_admin_of_group(group_dto) and member != group_dto.member:
         return "user is not admin of the group."
     
     (res, err) = DB.transaction(DB.delete_member_from_group, member, group_dto.group)
