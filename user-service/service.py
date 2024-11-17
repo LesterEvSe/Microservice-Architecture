@@ -81,7 +81,7 @@ class UserHandler(BaseHTTPRequestHandler):
             self._task_service_interaction(json.dumps({
                 "type": "is_admin",
                 "group_id": data["group_id"],
-                "username": username
+                "member": username
             }))
         
         elif msg_type == "get_group_users":
