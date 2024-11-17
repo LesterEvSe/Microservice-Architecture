@@ -29,14 +29,14 @@ services:
       POSTGRES_PASSWORD: eighty9@doublet
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U user_admin -d users"]
-      interval: 2s
+      interval: 5s
       timeout: 10s
-      retries: 20
-      start_period: 2s
-    volumes:
-      - user_postgres_data:/var/lib/postgresql/data
+      retries: 10
+      start_period: 5s
     ports:
       - "5432:5432"
+    volumes:
+      - user_postgres_data:/var/lib/postgresql/data
 
   user-service:
     build:
@@ -62,14 +62,14 @@ services:
       POSTGRES_PASSWORD: A7noth56therUser
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U task_admin -d tasks"]
-      interval: 2s
+      interval: 5s
       timeout: 10s
-      retries: 20
-      start_period: 2s
-    volumes:
-      - task_postgres_data:/var/lib/postgresql/data
+      retries: 10
+      start_period: 5s
     ports:
       - "5433:5432"  # Outer 5433 port
+    volumes:
+      - task_postgres_data:/var/lib/postgresql/data
 
   task-service:
     build:

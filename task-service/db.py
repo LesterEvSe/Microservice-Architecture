@@ -118,6 +118,7 @@ class TaskDB:
             RETURNING group_id
         ''', (group_name,))
         group_id = self.cursor.fetchone()[0]
+        self.conn.commit()
         return group_id
     
     # Next 3 methods only for group admins
@@ -134,6 +135,7 @@ class TaskDB:
                 INSERT INTO group_members (group_id, member, admin)
                 VALUES (%s, %s, %s)
             ''', (group.group, group.member, group.admin))
+            self.conn.commit()
             return (True, None)
         except psycopg2.Error as e:
             return (False, f"Error adding member: {e}")

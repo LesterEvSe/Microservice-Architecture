@@ -9,3 +9,6 @@ To update submodules code
 
 For get k8s files use the command:
 `kompose convert`
+
+Connect to DB:
+`docker exec -it <container-id> psql -U <username> -d <db-name>`
