@@ -209,9 +209,10 @@ class TaskDB:
                 description = %s, 
                 deadline = %s, 
                 todo_task = %s,
-                members = %s,
+                members = %s
             WHERE task_id = %s
         ''', (task.task, task.description, task.deadline, task.todo_task, task.members, task_id))
+        self.conn.commit()
         return (True, None)
 
     def get_tasks_for_group(self, group_id):

@@ -81,7 +81,7 @@ def update_task(group_data_dto: GroupDataDTO, task_dto: TaskDTO):
     group_data = group_data_dto_to_entity(group_data_dto)
     task = task_dto_to_task_entity(task_dto)
 
-    (res, err) = DB.transaction(DB.update_task, group_data.task_id, task)
+    (res, err) = DB.update_task(group_data.task_id, task)
     return None if res else err
 
 def delete_task(group_data_dto: GroupDataDTO):
