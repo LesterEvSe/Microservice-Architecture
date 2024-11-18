@@ -36,6 +36,18 @@ return_type {
 }
 ```
 
+### Is User Exist
+``` shell
+curl -X POST http://localhost:5001/ -H "Content-Type: application/json" -d '{
+    "type": "is_user_exist",
+    "username": "Test0"
+}'
+
+return_type {
+    "is_exist": "True/False"
+}
+```
+
 ### Get Groups
 ``` shell
 curl -X POST http://localhost:5001/ -H "Content-Type: application/json" -d '{

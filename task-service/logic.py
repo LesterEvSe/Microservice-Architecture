@@ -100,7 +100,6 @@ def get_tasks_for_group(group: GroupDTO):
         return (False, "user is not in the group.")
     
     tasks = DB.get_tasks_for_group(group.group)
-    print(tasks)
     if 'deadline' in tasks:
         tasks['deadline'] = [dt.isoformat() if isinstance(dt, datetime) else dt for dt in tasks['deadline']]
     return (True, tasks)

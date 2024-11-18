@@ -65,6 +65,10 @@ class UserHandler(BaseHTTPRequestHandler):
                 self._send_data_ok({"jwt": jwt_token})
             return
 
+        elif msg_type == "is_user_exist":
+            self._send_data_ok({"is_exist": logic.is_user_exist(data["username"])})
+            return
+
         check_jwt = logic.get_username_and_check_jwt(data["jwt"])
         if not check_jwt[0]:
             self._send_error(check_jwt[1])
