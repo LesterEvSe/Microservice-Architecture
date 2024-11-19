@@ -107,7 +107,7 @@ class UserHandler(BaseHTTPRequestHandler):
         
         elif msg_type == "add_member_to_group":
             if not logic.is_user_exist(data.get("member")):
-                self.send_error("member is not exist.")
+                self._send_error("member is not exist.")
                 return
             self._task_service_interaction(json.dumps({
                 "type": "add_member_to_group",

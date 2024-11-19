@@ -22,7 +22,7 @@ services:
       - "5005:5005"
     
   user-db:
-    image: postgres:17  # # Pin to specific version to omit pulling each time.
+    image: postgres:17  # Pin to specific version to omit pulling each time.
     environment:
       POSTGRES_DB: users
       POSTGRES_USER: user_admin
