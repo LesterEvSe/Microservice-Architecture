@@ -47,7 +47,7 @@ def add_member_to_group(member, group_dto: GroupDTO):
         return "user is not admin of the group."
     
     group = group_dto_to_group_entity(GroupDTO(group_dto.group, member), admin=False)
-    (res, err) = DB.transaction(DB.add_member_to_group, group)
+    (res, err) = DB.add_member_to_group(group)
     return None if res else err
 
 def delete_member_from_group(member, group_dto: GroupDTO) -> str:
