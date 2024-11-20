@@ -24,7 +24,7 @@ services:
     depends_on:
       rabbitmq:
         condition: service_healthy
-    ports:
+    ports:  # Ports do not need at all for RabbitMQ
       - "5000:5000"
   
   search:

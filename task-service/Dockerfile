@@ -1,5 +1,5 @@
 FROM python:3.10-slim
-RUN pip install psycopg2-binary
+RUN pip install psycopg2-binary pika
 WORKDIR /task-service
 COPY . /task-service
 
