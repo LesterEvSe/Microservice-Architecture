@@ -146,6 +146,7 @@ class TaskDB:
                 DELETE FROM group_members 
                 WHERE group_id = %s AND member = %s
             ''', (group_id, member))
+            self.conn.commit()
             return (True, None)
         except psycopg2.Error as e:
             return (False, f"Error deleting member: {e}")
