@@ -118,6 +118,7 @@ class TaskDB:
             RETURNING group_id
         ''', (group_name,))
         group_id = self.cursor.fetchone()[0]
+        self.conn.commit()
         return group_id
     
     # Next 3 methods only for group admins
@@ -134,6 +135,7 @@ class TaskDB:
                 INSERT INTO group_members (group_id, member, admin)
                 VALUES (%s, %s, %s)
             ''', (group.group, group.member, group.admin))
+            self.conn.commit()
             return (True, None)
         except psycopg2.Error as e:
             return (False, f"Error adding member: {e}")
@@ -144,6 +146,7 @@ class TaskDB:
                 DELETE FROM group_members 
                 WHERE group_id = %s AND member = %s
             ''', (group_id, member))
+            self.conn.commit()
             return (True, None)
         except psycopg2.Error as e:
             return (False, f"Error deleting member: {e}")
@@ -207,9 +210,10 @@ class TaskDB:
                 description = %s, 
                 deadline = %s, 
                 todo_task = %s,
-                members = %s,
+                members = %s
             WHERE task_id = %s
         ''', (task.task, task.description, task.deadline, task.todo_task, task.members, task_id))
+        self.conn.commit()
         return (True, None)
 
     def get_tasks_for_group(self, group_id):

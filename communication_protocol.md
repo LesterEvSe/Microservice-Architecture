@@ -193,4 +193,3 @@ return_type {
 ```
 
 ### Google auth
-I do not know yet.

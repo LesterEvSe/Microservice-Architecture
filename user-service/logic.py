@@ -42,6 +42,9 @@ def get_username_and_check_jwt(jwt_token):
         return (False, "JWT key doesn't correct.")
     return (True, username)
 
+def is_user_exist(username):
+    return DB.is_username_exist(username)
+
 def register_user(user_dto: UserDTO):
     user = dto_to_user_entity(user_dto, _generate_jwt(user_dto.username))
 

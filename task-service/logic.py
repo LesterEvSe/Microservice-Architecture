@@ -47,14 +47,14 @@ def add_member_to_group(member, group_dto: GroupDTO):
         return "user is not admin of the group."
     
     group = group_dto_to_group_entity(GroupDTO(group_dto.group, member), admin=False)
-    (res, err) = DB.transaction(DB.add_member_to_group, group)
+    (res, err) = DB.add_member_to_group(group)
     return None if res else err
 
 def delete_member_from_group(member, group_dto: GroupDTO) -> str:
-    if not is_user_admin_of_group(group_dto):
+    if not is_user_admin_of_group(group_dto) and member != group_dto.member:
         return "user is not admin of the group."
     
-    (res, err) = DB.transaction(DB.delete_member_from_group, member, group_dto.group)
+    (res, err) = DB.delete_member_from_group(member, group_dto.group)
     return None if res else err
 
 
@@ -81,7 +81,7 @@ def update_task(group_data_dto: GroupDataDTO, task_dto: TaskDTO):
     group_data = group_data_dto_to_entity(group_data_dto)
     task = task_dto_to_task_entity(task_dto)
 
-    (res, err) = DB.transaction(DB.update_task, group_data.task_id, task)
+    (res, err) = DB.update_task(group_data.task_id, task)
     return None if res else err
 
 def delete_task(group_data_dto: GroupDataDTO):
@@ -100,7 +100,6 @@ def get_tasks_for_group(group: GroupDTO):
         return (False, "user is not in the group.")
     
     tasks = DB.get_tasks_for_group(group.group)
-    print(tasks)
     if 'deadline' in tasks:
         tasks['deadline'] = [dt.isoformat() if isinstance(dt, datetime) else dt for dt in tasks['deadline']]
     return (True, tasks)

@@ -9,7 +9,6 @@ TASK_SERVICE=5002
 class UserHandler(BaseHTTPRequestHandler):
     def _task_service_interaction(self, json_data):
         task_data = self.send_to_service(TASK_SERVICE, json_data)
-        print(task_data)
         if "error" in task_data:
             self._send_error(task_data["error"])
         else:
@@ -82,7 +81,7 @@ class UserHandler(BaseHTTPRequestHandler):
             self._task_service_interaction(json.dumps({
                 "type": "is_admin",
                 "group_id": data["group_id"],
-                "username": username
+                "member": username
             }))
         
         elif msg_type == "get_group_users":
@@ -107,6 +106,9 @@ class UserHandler(BaseHTTPRequestHandler):
             }))
         
         elif msg_type == "add_member_to_group":
+            if not logic.is_user_exist(data.get("member")):
+                self._send_error("member is not exist.")
+                return
             self._task_service_interaction(json.dumps({
                 "type": "add_member_to_group",
                 "group_id": data["group_id"],
