@@ -36,6 +36,19 @@ return_type {
 }
 ```
 
+### Google SignUp
+``` shell
+curl -X POST http://localhost:5001/ -H "Content-Type: application/json" -d '{
+    "type": "google_sign_up",
+    "username": "Test0",
+    "jwt": "google.jwt.key"
+}'
+
+return_type {
+    "jwt": "key"
+}
+```
+
 ### Get Groups
 ``` shell
 curl -X POST http://localhost:5001/ -H "Content-Type: application/json" -d '{

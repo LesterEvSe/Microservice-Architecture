@@ -111,6 +111,7 @@ services:
     volumes:
       - task_postgres_data:/var/lib/postgresql/data
 
+  # TODO think about password in .env file
   task-service:
     build:
       context: ./task-service
