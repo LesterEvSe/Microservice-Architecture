@@ -1,49 +1,10 @@
-#from http.server import BaseHTTPRequestHandler
-#import requests
 import pika
 import json
 
 import logic
 from Data.UserDTO import *
 
-#TASK_SERVICE=5002
-
 class RabbitMQClient:
-    '''
-    def _task_service_interaction(self, json_data):
-        task_data = self.send_to_service(TASK_SERVICE, json_data)
-        if "error" in task_data:
-            self._send_error(task_data["error"])
-        else:
-            self._send_data_ok(task_data)
-
-    def _send_error(self, error_msg):
-        self.send_response(500)
-        self.end_headers()
-        self.wfile.write(json.dumps({
-            "error": error_msg
-        }).encode())
-    
-    def _send_data_ok(self, dict_data):
-        self.send_response(200)
-        self.send_header('Content-type', 'application/json')
-        self.end_headers()
-        self.wfile.write(json.dumps(dict_data).encode('utf-8'))
-    
-    def send_to_service(self, to_port, json_data):
-        service_url = f'http://task-service:{to_port}/'
-        try:
-            response = requests.post(service_url, headers={'Content-Type': 'application/json'}, data=json_data)
-
-            if response.status_code == 200:
-                return response.json()
-            else:
-                error_message = response.text if response.text else "unexpected error from service"
-            return {"error": f"Failed to communicate with service at port {to_port}, status code: {response.status_code}, message: {error_message}"}
-        except Exception as e:
-            return {"error": str(e)}
-    '''
-    
     def _send_data(self, data: dict, send_to_queue: str, correlation_id, reply_to_queue=None):
         if not send_to_queue.startswith('amq.gen-'):
             self.channel.queue_declare(queue=send_to_queue, durable=True)

@@ -1,4 +1,3 @@
-#from http.server import BaseHTTPRequestHandler
 import pika
 import json
 
@@ -8,24 +7,9 @@ from Data.GroupDTO import *
 
 
 class RabbitMQClient:
-    '''
-    def _send_error(self, error_msg):
-        self.send_response(500)
-        self.end_headers()
-        self.wfile.write(error_msg.encode('utf-8'))
-    
-    def _send_data(self, dict_data):
-        self.send_response(200)
-        self.send_header('Content-type', 'application/json')
-        self.end_headers()
-        self.wfile.write(json.dumps(dict_data).encode('utf-8'))
-    '''
-    
     def _send_data(self, dict_data: dict, queue_name, correlation_id):
         if not queue_name.startswith('amq.gen-'):
             self.channel.queue_declare(queue=queue_name, durable=True)
-        
-        # self.channel.queue_declare(queue=queue_name, durable=True)
 
         self.channel.basic_publish(
             exchange='',
@@ -41,8 +25,6 @@ class RabbitMQClient:
     def _send_error(self, error_msg: str, queue_name, correlation_id):
         if not queue_name.startswith('amq.gen-'):
             self.channel.queue_declare(queue=queue_name, durable=True)
-        
-        # self.channel.queue_declare(queue=queue_name, durable=True)
 
         self.channel.basic_publish(
             exchange='',
