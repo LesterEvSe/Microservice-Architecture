@@ -58,7 +58,8 @@ class RabbitMQClient:
                 correlation_id=correlation_id
             )
         )
-        #print(f"[x] Sent message to {send_to_queue}: {data}")
+        print(f"Sent data to {send_to_queue} with correlation_id {correlation_id}: {data}")
+        print("reply to queue", reply_to_queue)
 
     def _send_error(self, error_msg: str, send_to_queue: str, correlation_id):
         self.channel.queue_declare(queue=send_to_queue, durable=True)
@@ -72,7 +73,7 @@ class RabbitMQClient:
                 correlation_id=correlation_id
             )
         )
-        #print(f"[x] Sent message to {send_to_queue}: {error_msg}")
+        print(f"Sent error to {send_to_queue} with correlation_id {correlation_id}: {error_msg}")
         
     
     def __init__(self, queue_name, host='rabbitmq', port=5672, vhost='/', user='admin', password='password'):
@@ -104,6 +105,7 @@ class RabbitMQClient:
 
     def process_message(self, ch, method, properties, body):
         data = json.loads(body)
+        print("get message", data)
         msg_type = data["type"]
 
         reply_to = properties.reply_to

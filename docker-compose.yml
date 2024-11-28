@@ -8,6 +8,8 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: admin
       RABBITMQ_DEFAULT_PASS: password
+      RABBITMQ_ERLANG_COOKIE: 'supersecretcookie'  # Unique cookie
+    command: rabbitmq-server -frame_max 268435456  # Set max size of msg equal 100 Mb
     healthcheck:
       test: ["CMD", "rabbitmqctl", "status"]
       interval: 2s
