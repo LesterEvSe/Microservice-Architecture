@@ -22,7 +22,10 @@ class RabbitMQClient:
     '''
     
     def _send_data(self, dict_data: dict, queue_name, correlation_id):
-        self.channel.queue_declare(queue=queue_name, durable=True)
+        if not queue_name.startswith('amq.gen-'):
+            self.channel.queue_declare(queue=queue_name, durable=True)
+        
+        # self.channel.queue_declare(queue=queue_name, durable=True)
 
         self.channel.basic_publish(
             exchange='',
@@ -36,7 +39,10 @@ class RabbitMQClient:
         print(f"Sent data to {queue_name} with correlation_id {correlation_id}: {dict_data}")
 
     def _send_error(self, error_msg: str, queue_name, correlation_id):
-        self.channel.queue_declare(queue=queue_name, durable=True)
+        if not queue_name.startswith('amq.gen-'):
+            self.channel.queue_declare(queue=queue_name, durable=True)
+        
+        # self.channel.queue_declare(queue=queue_name, durable=True)
 
         self.channel.basic_publish(
             exchange='',
