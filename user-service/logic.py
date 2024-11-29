@@ -1,8 +1,17 @@
 import jwt
 import datetime
 
+# for google oauth
+import os
+import secrets
+import base64
+from google.oauth2 import id_token
+from google.auth.transport import requests
+from dotenv import load_dotenv
+
 from db import UserDB
 from Data.UserDTO import *
+from Data.GoogleDTO import *
 from Entity.User import *
 from Mappings.mapper import *
 
@@ -66,3 +75,29 @@ def login_user(user_dto: UserDTO):
     
     DB.update_user_data_with_username(user.username, user)
     return (True, user.jwt_token)
+
+# TODO test it
+# Official Doc https://developers.google.com/identity/gsi/web/guides/verify-google-id-token#python
+def google_sign_up(google: GoogleDTO):
+    try:
+        # Specify the CLIENT_ID of the app that accesses the backend:
+        idinfo = id_token.verify_oauth2_token(google.jwt, requests.Request(), os.getenv("CLIENT_ID"))
+        email = idinfo.get('email')
+        if not email:
+            raise ValueError("google token without 'email'")
+        
+    except ValueError as e:
+        return (False, f"Invalid Google token: {e}")
+    
+    if DB.is_user_email_exist(email):
+        username = DB.get_username_for_email(email)
+        jwt_key = _generate_jwt(username)
+        DB.updat_jwt_with_email(jwt_key, email)
+        return (True, jwt_key)
+    else:
+        raw_bytes = secrets.token_bytes(32)
+        password = base64.b64encode(raw_bytes).decode('utf-8')
+        user = dto_to_user_entity(UserDTO(google.username, email, password), _generate_jwt(google.username))
+        DB.register_user(user)
+        return (True, user.jwt_token)
+    

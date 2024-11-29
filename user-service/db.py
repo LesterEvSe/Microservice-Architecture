@@ -35,6 +35,11 @@ class UserDB:
         result = self.cursor.fetchone()
         return result[0] if result else None
     
+    def get_username_for_email(self, email):
+        self.cursor.execute('SELECT username FROM registration WHERE email = %s', (email,))
+        result = self.cursor.fetchone()
+        return result[0] if result else None
+    
     def is_username_exist(self, username) -> bool:
         self.cursor.execute('SELECT 1 FROM registration WHERE username = %s', (username,))
         return self.cursor.fetchone() is not None
@@ -54,7 +59,15 @@ class UserDB:
             WHERE username = %s
         ''', (user.email, user.username, user.password, user.jwt_token, username))
         self.conn.commit()
-
+    
+    def updat_jwt_with_email(self, jwt, email):
+        self.cursor.execute('''
+            UPDATEregistration
+            SET jwt = %s
+            WHERE email = %s
+        ''', (jwt, email))
+        self.conn.commit()
+    
     def register_user(self, user: User):
         self.cursor.execute('INSERT INTO registration (email, username, password, jwt) VALUES (%s, %s, %s, %s)',
                             (user.email, user.username, user.password, user.jwt_token))

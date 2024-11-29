@@ -1,5 +1,6 @@
 from Entity.User import *
 from Data.UserDTO import *
+from Data.GoogleDTO import *
 
 def json_to_user_dto(json_data):
     try:
@@ -19,3 +20,14 @@ def dto_to_user_entity(user_dto: UserDTO, jwt_token):
 
 def user_entity_to_dto(user: User):
     return UserDTO(username=user.username, email=user.email, password=user.password)
+
+def json_to_google_dto(json_data):
+    try:
+        username = json_data.get("username")
+        jwt = json_data.get("jwt")
+        
+        if not username or not jwt:
+            raise ValueError("Incomplete user data")
+        return (True, GoogleDTO(username, jwt))
+    except (TypeError, ValueError) as e:
+        return (False, f"error when extracting data: {e}")

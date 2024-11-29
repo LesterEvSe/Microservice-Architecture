@@ -3,10 +3,20 @@ import json
 
 import logic
 from Data.UserDTO import *
+from Data.GoogleDTO import *
+
+'''
+{
+                                                                 "type": "google_sign_up",
+                                                                 "username": "Test0",
+                                                                 "jwt": "eyJhbGciOiJSUzI1NiIsImtpZCI6IjM2MjgyNTg2MDExMTNlNjU3NmE0NTMzNzM2NWZlOGI4OTczZDE2NzEiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhenAiOiIxMDY0MjE3NDM5NzA0LThya2w2MGRlY2lqYWFkZWdoMzU1aHVqMG1uZzgwbnY3LmFwcHMuZ29vZ2xldXNlcmNvbnRlbnQuY29tIiwiYXVkIjoiMTA2NDIxNzQzOTcwNC04cmtsNjBkZWNpamFhZGVnaDM1NWh1ajBtbmc4MG52Ny5hcHBzLmdvb2dsZXVzZXJjb250ZW50LmNvbSIsInN1YiI6IjEwMjYxOTA2MTAxODUzMjE1NzcyMiIsImVtYWlsIjoiZXZnZW5paS5uaWtvbGFldmljaGZnaEBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibm9uY2UiOiJzbXRoIiwibmJmIjoxNzMyODc5MjgxLCJpYXQiOjE3MzI4Nzk1ODEsImV4cCI6MTczMjg4MzE4MSwianRpIjoiOTljNzllMzBmOTlhZmYwNjg5YzM3NDY5ZTlmY2RkNjEwYjExNGM2ZSJ9.HuoGqM9pvxvxmJ3e6DA8hz5X57_wNk5L2bgQaNalHmFx9a8ighbjCt2FIQTQITL-gpU6JJj6FmGEplBLu-tvoGeov1RtNzNyqjZWcZEbouRZ2EUXq4Q3xkd1Bz8Rd8EWs5LqhbPYrFq1b286VfkogGUSFqaYIiFsv67Ipm44mRgFp32Thg6QPZpV6ZlcnHPc2Uuq-fWOWPFsWq-75J8OjqYIZYx-4Qxgp1XYetep7DH4ZhICwfmE77dK6bB4UC25gwLAhPpqwx5-woF3_Pn216SYXHsqi77ASBJBwL5l8kzRZHCRlVMT5areR860GYHVbEUfCHv39anIDW20cJjbag"}
+'''
 
 class RabbitMQClient:
     def _send_data(self, data: dict, send_to_queue: str, correlation_id, reply_to_queue=None):
         if not send_to_queue.startswith('amq.gen-'):
+            self.channel.queue_declare(queue=send_to_queue, durable=True)
+        else:
             self.channel.queue_declare(queue=send_to_queue, durable=True)
         
         self.channel.basic_publish(
@@ -102,6 +112,19 @@ class RabbitMQClient:
             else:
                 self._send_data({"jwt": jwt_token}, reply_to, correlation_id)
             return
+        
+        elif msg_type == "google_sign_up":
+            (res, google_dto) = logic.json_to_google_dto(data)
+            if not res:
+                self._send_error(google_dto, reply_to, correlation_id)
+                return
+            
+            (res, jwt_token) = logic.google_sign_up(google_dto)
+            if not res:
+                self._send_error(jwt_token, reply_to, correlation_id)
+            else:
+                self._send_data({"jwt": jwt_token}, reply_to, correlation_id)
+            return
 
         check_jwt = logic.get_username_and_check_jwt(data["jwt"])
         if not check_jwt[0]:
@@ -145,7 +168,7 @@ class RabbitMQClient:
         
         elif msg_type == "add_member_to_group":
             if not logic.is_user_exist(data.get("member")):
-                self._send_error("member is not exist.", reply_to)
+                self._send_error("member is not exist.", reply_to, correlation_id)
                 return
             self._send_data({
                 "type": "add_member_to_group",
