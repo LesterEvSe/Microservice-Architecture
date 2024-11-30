@@ -16,8 +16,6 @@ class RabbitMQClient:
     def _send_data(self, data: dict, send_to_queue: str, correlation_id, reply_to_queue=None):
         if not send_to_queue.startswith('amq.gen-'):
             self.channel.queue_declare(queue=send_to_queue, durable=True)
-        else:
-            self.channel.queue_declare(queue=send_to_queue, durable=True)
         
         self.channel.basic_publish(
             exchange='',
