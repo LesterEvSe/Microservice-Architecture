@@ -90,7 +90,7 @@ def google_sign_up(google: GoogleDTO):
     if email_exist:
         username = DB.get_username_for_email(email)
         jwt_key = _generate_jwt(username)
-        DB.updat_jwt_with_email(jwt_key, email)
+        DB.update_jwt_with_email(jwt_key, email)
         return (True, jwt_key)
     
     elif not email_exist and google.username:

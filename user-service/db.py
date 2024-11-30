@@ -60,9 +60,9 @@ class UserDB:
         ''', (user.email, user.username, user.password, user.jwt_token, username))
         self.conn.commit()
     
-    def updat_jwt_with_email(self, jwt, email):
+    def update_jwt_with_email(self, jwt, email):
         self.cursor.execute('''
-            UPDATEregistration
+            UPDATE registration
             SET jwt = %s
             WHERE email = %s
         ''', (jwt, email))
