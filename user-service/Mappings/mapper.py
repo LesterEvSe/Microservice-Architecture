@@ -23,10 +23,10 @@ def user_entity_to_dto(user: User):
 
 def json_to_google_dto(json_data):
     try:
-        username = json_data.get("username")
+        username = json_data.get("username")  # Can be empty
         jwt = json_data.get("jwt")
         
-        if not username or not jwt:
+        if not jwt:
             raise ValueError("Incomplete user data")
         return (True, GoogleDTO(username, jwt))
     except (TypeError, ValueError) as e:

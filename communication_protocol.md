@@ -204,5 +204,3 @@ return_type {
     "users": ["username0", ...]
 }
 ```
-
-### Google auth

@@ -74,7 +74,6 @@ def login_user(user_dto: UserDTO):
     DB.update_user_data_with_username(user.username, user)
     return (True, user.jwt_token)
 
-# TODO test it
 # Official Doc https://developers.google.com/identity/gsi/web/guides/verify-google-id-token#python
 def google_sign_up(google: GoogleDTO):
     try:
@@ -87,15 +86,20 @@ def google_sign_up(google: GoogleDTO):
     except ValueError as e:
         return (False, f"Invalid Google token: {e}")
     
-    if DB.is_user_email_exist(email):
+    email_exist = DB.is_user_email_exist(email)
+    if email_exist:
         username = DB.get_username_for_email(email)
         jwt_key = _generate_jwt(username)
         DB.updat_jwt_with_email(jwt_key, email)
         return (True, jwt_key)
-    else:
+    
+    elif not email_exist and google.username:
         raw_bytes = secrets.token_bytes(32)
         password = base64.b64encode(raw_bytes).decode('utf-8')
         user = dto_to_user_entity(UserDTO(google.username, email, password), _generate_jwt(google.username))
         DB.register_user(user)
         return (True, user.jwt_token)
+    
+    else:
+        return (False, "user does not exist")
     
