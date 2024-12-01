@@ -204,3 +204,18 @@ return_type {
     "users": ["username0", ...]
 }
 ```
+
+### Get tasks for user
+``` shell
+curl -X POST http://localhost:5001/ -H "Content-Type: application/json" -d '{
+    "type": "get_tasks_for_user",
+    "jwt": "key"
+}'
+
+return_type {
+    "group_id": ["id0", ...],
+    "group_name": ["group_name0", ...],
+    "task_id": ["task_id0", ...],
+    "task": ["task0", ...]
+}
+```

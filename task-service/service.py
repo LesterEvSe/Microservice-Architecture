@@ -204,3 +204,10 @@ class RabbitMQClient:
                 self._send_error(users, reply_to, correlation_id)
             else:
                 self._send_data(users, reply_to, correlation_id)
+        
+        elif msg_type == "get_tasks_for_user":
+            (res, tasks) = logic.get_assigned_users_to_task(data["user"])
+            if not res:
+                self._send_error(tasks, reply_to, correlation_id)
+            else:
+                self._send_data(tasks, reply_to, correlation_id)

@@ -250,6 +250,40 @@ class TaskDB:
             WHERE task_id = %s
         ''', (task_id,))
         return self.cursor.fetchall()[0]
+    
+    def get_tasks_and_groups_fro_user(self, user):
+        self.cursor.execute('''
+            SELECT 
+                g.group_id,
+                g.group_name,
+                t.task_id,
+                t.task_name
+            FROM 
+                group_members gm
+            JOIN 
+                groups g ON gm.group_id = g.group_id
+            JOIN 
+                group_data gd ON g.group_id = gd.group_id
+            JOIN 
+                task_data t ON gd.task_id = t.task_id
+            WHERE 
+                gm.member = %s;
+            ''', (user,))
+        
+        result = self.cursor.fetchall()
+        output = {
+            "group_id": [],
+            "group_name": [],
+            "task_id": [],
+            "task_name": []
+        }
+        
+        for row in result:
+            output["group_id"].append(row[0])
+            output["group_name"].append(row[1])
+            output["task_id"].append(row[2])
+            output["task_name"].append(row[3])
+        return output
 
     def transaction(self, func, *args, **kwargs):
         try:
@@ -263,12 +297,3 @@ class TaskDB:
             return (False, f"an error occurred during the transaction: {e}")
         finally:
             self.conn.autocommit = True
-    
-    
-
-
-# Example of use
-# task_service = TaskService()
-
-# task_service.add_task('Development', 'Create API', '2024-12-31 23:59:59', 'Development API', True, 'user123')
-# task_service.delete_task('Development')

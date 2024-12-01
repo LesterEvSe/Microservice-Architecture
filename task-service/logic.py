@@ -108,3 +108,6 @@ def get_assigned_users_to_task(group_data: GroupDataDTO):
     if not DB.is_user_in_group(group_data.user, group_data.group_id):
         return (False, "user is not in the group.")
     return (True, DB.get_assigned_users_to_task(group_data.task_id))
+
+def get_tasks_for_user(user):
+    return DB.get_tasks_and_groups_fro_user(user)

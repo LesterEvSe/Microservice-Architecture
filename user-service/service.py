@@ -230,3 +230,9 @@ class RabbitMQClient:
                 "task_id": data["task_id"],
                 "user": username
             }, self.task_service_queue, correlation_id, reply_to)
+        
+        elif msg_type == "get_tasks_for_user":
+            self._send_data({
+                "type": "get_tasks_for_user",
+                "user": username
+            }, self.task_service_queue, correlation_id, reply_to)
