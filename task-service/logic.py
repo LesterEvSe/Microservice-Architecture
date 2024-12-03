@@ -110,4 +110,9 @@ def get_assigned_users_to_task(group_data: GroupDataDTO):
     return (True, DB.get_assigned_users_to_task(group_data.task_id))
 
 def get_tasks_for_user(user):
-    return DB.get_tasks_and_groups_fro_user(user)
+    data = DB.get_tasks_and_groups_fro_user(user)
+    if not 'deadline' in data:
+        raise "The database did not return the deadline"
+    
+    data['deadline'] = [dt.isoformat() if isinstance(dt, datetime) else dt for dt in data['deadline']]
+    return data

@@ -9,9 +9,6 @@ elif [[ "$1" == "prune" ]]; then
     minikube stop
     minikube delete
     exit 0
-else
-    echo "Unknown option."
-    exit 1
 fi
 
 apply_and_wait() {
