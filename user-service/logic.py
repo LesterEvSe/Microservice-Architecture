@@ -1,11 +1,14 @@
 import jwt
 import datetime
+import os
 
 # for google oauth
 import secrets
 import base64
 from google.oauth2 import id_token
 from google.auth.transport import requests
+
+from dotenv import load_dotenv
 
 from db import UserDB
 from Data.UserDTO import *
@@ -74,11 +77,11 @@ def login_user(user_dto: UserDTO):
     DB.update_user_data_with_username(user.username, user)
     return (True, user.jwt_token)
 
-# Official Doc https://developers.google.com/identity/gsi/web/guides/verify-google-id-token#python
+# Official doc: https://developers.google.com/identity/gsi/web/guides/verify-google-id-token#python
 def google_sign_up(google: GoogleDTO):
     try:
         # Specify the CLIENT_ID of the app that accesses the backend:
-        idinfo = id_token.verify_oauth2_token(google.jwt, requests.Request(), "455836721320-ed0nlrlgjjp4m26dltrr7nqo3or5emn2.apps.googleusercontent.com")  # client id
+        idinfo = id_token.verify_oauth2_token(google.jwt, requests.Request(), os.getenv("CLIENT_ID"))
         email = idinfo.get('email')
         if not email:
             raise ValueError("google token without 'email'")

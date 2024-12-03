@@ -14,34 +14,31 @@ else
     exit 1
 fi
 
-echo ""
-kubectl apply -f rabbitmq-and-db.yaml
-echo ""
+apply_and_wait() {
+    local file=$1
+    local deployments=("${@:2}")
 
-for deployment in rabbitmq user-db task-db; do
-    kubectl wait --for=condition=available --timeout=5m deployment/$deployment
-done
+    echo ""
+    kubectl apply -f "$file"
+    echo ""
 
+    for deployment in "${deployments[@]}"; do
+        kubectl wait --for=condition=available --timeout=5m deployment/"$deployment" &
+    done
+    wait
+}
 
-# Another round for dependent services
-echo ""
-kubectl apply -f common-services.yaml
-echo ""
-
-for deployment in frontend calendar search user-service task-service; do
-    kubectl wait --for=condition=available --timeout=5m deployment/$deployment &
-done
-
-# Waiting for all background processes to be completed
-wait
+# First, the main services should start, and then those that depend on them
+apply_and_wait rabbitmq-and-db.yaml rabbitmq user-db task-db
+apply_and_wait common-services.yaml frontend calendar search user-service task-service
 
 
-echo -e "All pods are now ready\n"
+echo -e "All pods are ready now.\n"
 
-echo "Pods"
+echo "========= Pods ==========="
 kubectl get pods
 
-echo -e "\nServices"
+echo -e "\n======= Services ========="
 kubectl get services
 
 
@@ -57,4 +54,5 @@ if [[ "$2" == "info" ]]; then
     done
 fi
 
+# To be able to connect from a localhost, i.e. an external device
 kubectl port-forward svc/frontend 5000:5000

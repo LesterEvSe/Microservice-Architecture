@@ -12,5 +12,5 @@ for pod in $pods; do
 
     echo "=== Logs for pod: $pod ==="
     kubectl logs $pod
-    echo "==========================="
+    echo "=========================="
 done
