@@ -216,6 +216,10 @@ return_type {
     "group_id": ["id0", ...],
     "group_name": ["group_name0", ...],
     "task_id": ["task_id0", ...],
-    "task": ["task0", ...]
+    "task_name": ["task0", ...],
+    "description": ["desc0", ...],
+    "deadline": ["deadline0", ...],
+    "todo_task": ["true/false", ...],
+    "members": [["member0", ...], ...]
 }
 ```

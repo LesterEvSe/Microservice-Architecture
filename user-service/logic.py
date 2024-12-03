@@ -17,15 +17,17 @@ from Entity.User import *
 from Mappings.mapper import *
 
 
-SECRET_KEY = "OK_6SOME_SE5CRET"
+CLIENT_ID = os.getenv("CLIENT_ID")
+SECRET_KEY = str(os.getenv("SECRET_KEY"))
 DB = UserDB(dbname="users", user="user_admin", password="eighty9@doublet", host="user-db", port="5432")
 
 # The data is hashed using an HS256 signature,
 # so it cannot be tampered with (at least at the time of writing the program :D).
-def _generate_jwt(username):
+def _generate_jwt(user_dto: UserDTO):
     expiration = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=365 * 100)
     return jwt.encode({
-        'username': username,
+        'username': user_dto.username,
+        'email': user_dto.email,
         'exp': expiration,
     }, SECRET_KEY, algorithm='HS256')
 
@@ -56,7 +58,7 @@ def is_user_exist(username):
     return DB.is_username_exist(username)
 
 def register_user(user_dto: UserDTO):
-    user = dto_to_user_entity(user_dto, _generate_jwt(user_dto.username))
+    user = dto_to_user_entity(user_dto, _generate_jwt(user_dto))
 
     if DB.is_user_email_exist(user.email):
         return (False, "Email already exists.")
@@ -67,7 +69,7 @@ def register_user(user_dto: UserDTO):
     return (True, user.jwt_token)
 
 def login_user(user_dto: UserDTO):
-    user = dto_to_user_entity(user_dto, _generate_jwt(user_dto.username))
+    user = dto_to_user_entity(user_dto, _generate_jwt(user_dto))
 
     if not DB.is_username_exist(user.username):
         return (False, "User doesn't exist.")
@@ -81,7 +83,7 @@ def login_user(user_dto: UserDTO):
 def google_sign_up(google: GoogleDTO):
     try:
         # Specify the CLIENT_ID of the app that accesses the backend:
-        idinfo = id_token.verify_oauth2_token(google.jwt, requests.Request(), os.getenv("CLIENT_ID"))
+        idinfo = id_token.verify_oauth2_token(google.jwt, requests.Request(), CLIENT_ID)
         email = idinfo.get('email')
         if not email:
             raise ValueError("google token without 'email'")
@@ -92,17 +94,20 @@ def google_sign_up(google: GoogleDTO):
     email_exist = DB.is_user_email_exist(email)
     if email_exist:
         username = DB.get_username_for_email(email)
-        jwt_key = _generate_jwt(username)
+        user_dto = UserDTO(username, email, None)
+        
+        jwt_key = _generate_jwt(user_dto)
         DB.update_jwt_with_email(jwt_key, email)
         return (True, jwt_key)
     
     elif not email_exist and google.username:
         raw_bytes = secrets.token_bytes(32)
         password = base64.b64encode(raw_bytes).decode('utf-8')
-        user = dto_to_user_entity(UserDTO(google.username, email, password), _generate_jwt(google.username))
+        user_dto = UserDTO(google.username, email, password)
+        
+        user = dto_to_user_entity(user_dto, _generate_jwt(user_dto))
         DB.register_user(user)
         return (True, user.jwt_token)
     
     else:
         return (False, "user does not exist")
-    

@@ -206,6 +206,9 @@ class RabbitMQClient:
                 self._send_data(users, reply_to, correlation_id)
         
         elif msg_type == "get_tasks_for_user":
+            print(data)
+            print("get user from data:", data.get("user"))
+            
             (res, tasks) = logic.get_tasks_for_user(data["user"])
             if not res:
                 self._send_error(tasks, reply_to, correlation_id)

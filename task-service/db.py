@@ -257,7 +257,11 @@ class TaskDB:
                 g.group_id,
                 g.group_name,
                 t.task_id,
-                t.task_name
+                t.task_name,
+                t.description, 
+                t.deadline, 
+                t.todo_task, 
+                t.members
             FROM 
                 group_members gm
             JOIN 
@@ -275,7 +279,11 @@ class TaskDB:
             "group_id": [],
             "group_name": [],
             "task_id": [],
-            "task_name": []
+            "task_name": [],
+            "description": [],
+            "deadline": [],
+            "todo_task": [],
+            "members": []
         }
         
         for row in result:
@@ -283,6 +291,10 @@ class TaskDB:
             output["group_name"].append(row[1])
             output["task_id"].append(row[2])
             output["task_name"].append(row[3])
+            output["description"].append(row[4])
+            output["deadline"].append(row[5])
+            output["todo_task"].append(row[6])
+            output["members"].append(row[7])
         return output
 
     def transaction(self, func, *args, **kwargs):
